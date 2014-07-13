@@ -67,12 +67,12 @@ inline char bit(char * buf, unsigned long bit) {
 }
 
 int main(int argc, char* argv[]) {
-    std::cout << "Starting Bloom Tree" << std::endl;
+    std::cerr << "Starting Bloom Tree" << std::endl;
 
     process_options(argc, argv);
 
     if (command == "query") {
-        std::cout << "Loading hashes from " << matrix_file << std::endl; 
+        std::cerr << "Loading hashes from " << matrix_file << std::endl; 
         std::ifstream in(matrix_file.c_str(), std::ios::in | std::ios::binary);
         jellyfish::file_header header(in);
         DIE_IF(!in.good(), "Couldn't parse bloom filter header!");
@@ -81,20 +81,20 @@ int main(int argc, char* argv[]) {
 
         auto k = header.key_len();
         jellyfish::mer_dna::k(k / 2);
-        std::cout << "Read hashes for k=" << jellyfish::mer_dna::k() 
+        std::cerr << "Read hashes for k=" << jellyfish::mer_dna::k() 
             << std::endl;
-	std::cout << "# Hash applications=" << header.nb_hashes() << std::endl;
+        std::cerr << "# Hash applications=" << header.nb_hashes() << std::endl;
 
-        std::cout << "Loading bloom tree topology: " << bloom_tree_file 
+        std::cerr << "Loading bloom tree topology: " << bloom_tree_file 
             << std::endl;
         BloomTree* root = read_bloom_tree(bloom_tree_file, hashes, header.nb_hashes());
 
-        std::cout << "Querying..." << std::endl;
+        std::cerr << "Querying..." << std::endl;
         query_from_file(root, query_file, std::cout);
 
     } else if (command == "convert") {
         // Load the JF Bloom Filter
-	std::cout << "Reading: " << jfbloom_file << std::endl;
+        std::cerr << "Reading: " << jfbloom_file << std::endl;
         std::ifstream in(jfbloom_file.c_str(), std::ios::in|std::ios::binary);
         DIE_IF(!in.good(), "Couldn't open jellyfish bloom filter");
         jellyfish::file_header header(in);
@@ -103,7 +103,7 @@ int main(int argc, char* argv[]) {
         auto length = header.size();
         auto num_bytes = length / 8 + (length % 8 != 0);
 
-        std::cout << "BF length = " << length << " bits, occupying "
+        std::cerr << "BF length = " << length << " bits, occupying "
             << num_bytes << " bytes" << std::endl; 
 
         // suck in the bits from the bf
@@ -122,11 +122,11 @@ int main(int argc, char* argv[]) {
         // covert that raw bit vector into an rrr compressed vector &
         // save it.
         sdsl::rrr_vector<255> rrr(b);
-        std::cout << "Compressed RRR vector is " 
+        std::cerr << "Compressed RRR vector is " 
             << sdsl::size_in_mega_bytes(rrr) << std::endl;
         sdsl::store_to_file(rrr, out_file);
 
         delete buf;
     }
-    std::cout << "Done." << std::endl;
+    std::cerr << "Done." << std::endl;
 }

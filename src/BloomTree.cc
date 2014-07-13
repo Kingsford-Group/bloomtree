@@ -91,13 +91,13 @@ void BloomTree::unload() {
 // Loads the bloom filtering into memory
 bool BloomTree::load() {
     if (bloom_filter == 0) {
-        std::cout << "Loading BF: " << filename << std::endl;
+        std::cerr << "Loading BF: " << filename << std::endl;
         if (bf_cache.size() > BF_INMEM_LIMIT) {
             // toss the bloom filter with the lowest usage
             BloomTree* loser = bf_cache.pop();
             loser->heap_ref.invalidate();
 
-            std::cout << "Unloading BF: " << loser->filename << std::endl;
+            std::cerr << "Unloading BF: " << loser->filename << std::endl;
             loser->unload();
         }
             
@@ -138,7 +138,7 @@ BloomTree* read_bloom_tree(
 
         node_info = Trim(node_info);
         if (node_info.size() == 0) continue;
-        std::cout << "Reading: " << node_info << std::endl;
+        std::cerr << "Reading BN info: " << node_info << std::endl;
         size_t level = node_info.find_first_not_of("*");
         node_info.erase(0, level);
 
@@ -175,7 +175,7 @@ BloomTree* read_bloom_tree(
         path.push_back(bn);
     }
 
-    std::cout << "Read " << n << " nodes in Bloom Tree" << std::endl;
+    std::cerr << "Read " << n << " nodes in Bloom Tree" << std::endl;
     
     return tree_root;
 }
