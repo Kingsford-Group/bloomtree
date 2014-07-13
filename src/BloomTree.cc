@@ -24,10 +24,12 @@ Heap<BloomTree> BloomTree::bf_cache;
 // construct a bloom filter with the given filter backing.
 BloomTree::BloomTree(
     const std::string & f, 
-    HashPair hp
+    HashPair hp,
+    int nh
 ) :
     filename(f),
     hashes(hp),
+    num_hash(nh),
     bloom_filter(0),
     parent(0),
     usage_count(0)
@@ -99,7 +101,7 @@ bool BloomTree::load() {
             loser->unload();
             
             // read the BF file and set bloom_filter
-            bloom_filter = new BF(filename, hashes);
+            bloom_filter = new BF(filename, hashes, num_hash);
 
             heap_ref = bf_cache.insert(this, usage());
         }
@@ -123,7 +125,8 @@ bool BloomTree::load() {
 */
 BloomTree* read_bloom_tree(
     const std::string & filename, 
-    HashPair & hashes
+    HashPair & hashes,
+    int nh
 ) {
     std::ifstream in(filename.c_str());
 
@@ -146,7 +149,7 @@ BloomTree* read_bloom_tree(
 
         n++;
 
-        BloomTree* bn =  new BloomTree(bf_filename, hashes); 
+        BloomTree* bn =  new BloomTree(bf_filename, hashes, nh); 
         // if we're at the root
         if (path.size() == 0) {
             DIE_IF(level != 0, "Root must start in column 0");

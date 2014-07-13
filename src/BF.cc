@@ -4,10 +4,11 @@
 
 #include <jellyfish/file_header.hpp>
 
-BF::BF(const std::string & f, HashPair hp) :
+BF::BF(const std::string & f, HashPair hp, int nh) :
     filename(f),
     bits(0),
-    hashes(hp)
+    hashes(hp),
+    num_hash(nh)
 { 
     load();
 }

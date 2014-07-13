@@ -12,7 +12,7 @@ typedef jellyfish::hash_pair<jellyfish::mer_dna> HashPair;
 // a kmer bloom filter
 class BF {
 public:
-    BF(const std::string & filename, HashPair hp);
+    BF(const std::string & filename, HashPair hp, int nh);
     ~BF();
 
     void load();
@@ -26,8 +26,8 @@ private:
     std::string matrix_file;
     sdsl::rrr_vector<127>* bits;
 
-    unsigned long num_hash;
     HashPair hashes;
+    unsigned long num_hash;
 };
 
 

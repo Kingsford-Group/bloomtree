@@ -11,7 +11,7 @@ static const int BF_INMEM_LIMIT = 32;
 
 class BloomTree {
 public:
-    BloomTree(const std::string & f, HashPair hp);
+    BloomTree(const std::string & f, HashPair hp, int nh);
     ~BloomTree();
     BloomTree* child(int which);
     void set_child(int which, BloomTree* c);
@@ -30,6 +30,7 @@ private:
 
     std::string filename;
     HashPair hashes;
+    int num_hash;
     BF* bloom_filter;
     BloomTree* children[2];
     BloomTree* parent;
@@ -37,6 +38,6 @@ private:
     Heap<BloomTree>::heap_reference heap_ref;
 };
 
-BloomTree* read_bloom_tree(const std::string & filename, HashPair & hashes);
+BloomTree* read_bloom_tree(const std::string & filename, HashPair & hashes, int nh);
 
 #endif
