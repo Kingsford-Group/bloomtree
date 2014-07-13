@@ -85,7 +85,8 @@ int main(int argc, char* argv[]) {
             << std::endl;
 	std::cout << "# Hash applications=" << header.nb_hashes() << std::endl;
 
-        std::cout << "Loading bloom tree topology." << std::endl;
+        std::cout << "Loading bloom tree topology: " << bloom_tree_file 
+            << std::endl;
         BloomTree* root = read_bloom_tree(bloom_tree_file, hashes, header.nb_hashes());
 
         query_from_file(root, query_file, std::cout);
