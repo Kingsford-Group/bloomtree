@@ -9,9 +9,9 @@ bool query_passes(BloomTree* root, const std::set<jellyfish::mer_dna> & q) {
     auto bf = root->bf();
     int c = 0;
     for (const auto & m : q) {
-        std::cout << "checking: " << m.to_str(); 
+        //DEBUG: std::cout << "checking: " << m.to_str(); 
         if (bf->contains(m)) c++;
-        std::cout << c << std::endl;
+        //DEBUG: std::cout << c << std::endl;
     }
     return (c > QUERY_THRESHOLD * q.size());
 }
@@ -25,7 +25,7 @@ void query(
 ) {
     root->increment_usage();
     if (query_passes(root, q)) {
-        std::cout << "passed at " << root->name() << std::endl;
+        //DEBUG: std::cout << "passed at " << root->name() << std::endl;
         int children = 0;
         if (root->child(0)) {
             query(root->child(0), q, out);
