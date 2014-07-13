@@ -20,6 +20,8 @@ BF::~BF() {
 bool BF::contains(const jellyfish::mer_dna & m) {
     uint64_t h0 = hashes.m1.times(m);
     uint64_t h1 = hashes.m2.times(m);
+
+    std::cout << "size = " << bits->size() << std::endl;
     
     const size_t base = h0 % bits->size();
     const size_t inc = h1 % bits->size();
