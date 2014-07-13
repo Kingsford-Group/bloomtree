@@ -99,12 +99,11 @@ bool BloomTree::load() {
 
             std::cout << "Unloading BF: " << loser->filename << std::endl;
             loser->unload();
-            
-            // read the BF file and set bloom_filter
-            bloom_filter = new BF(filename, hashes, num_hash);
-
-            heap_ref = bf_cache.insert(this, usage());
         }
+            
+        // read the BF file and set bloom_filter
+        bloom_filter = new BF(filename, hashes, num_hash);
+        heap_ref = bf_cache.insert(this, usage());
     }
     return true;
 }
