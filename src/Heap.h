@@ -88,8 +88,8 @@ private:
     }
 
     int minchild(int pos) {
-        auto left = 2*pos + 1;
-        auto right = 2*pos + 2;
+        size_t left = 2*pos + 1;
+        size_t right = 2*pos + 2;
         // both children exist
         if (right < heap.size()) {
             // return the smallest

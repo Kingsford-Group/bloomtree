@@ -136,7 +136,7 @@ BloomTree* read_bloom_tree(
 
         node_info = Trim(node_info);
         if (node_info.size() == 0) continue;
-        int level = node_info.find_first_not_of("*");
+        size_t level = node_info.find_first_not_of("*");
         node_info.erase(0, level);
 
         // each node info is a comma separated list
