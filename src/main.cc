@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
         in.close();
 
         auto k = header.key_len();
-        jellyfish::mer_dna::k(k);
+        jellyfish::mer_dna::k(k / 2);
         std::cout << "Read hashes for k=" << jellyfish::mer_dna::k() 
             << std::endl;
 	std::cout << "# Hash applications=" << header.nb_hashes() << std::endl;
