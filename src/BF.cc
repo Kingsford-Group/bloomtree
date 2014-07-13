@@ -44,6 +44,7 @@ void BF::save() {
 // read the bit vector and the matrices for the hash functions.
 void BF::load() {
     // read the actual bits
+    bits = new sdsl::rrr_vector<255>();
     sdsl::load_from_file(*bits, filename);
 }
 

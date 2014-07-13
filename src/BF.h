@@ -24,7 +24,7 @@ public:
 private:
     std::string filename;
     std::string matrix_file;
-    sdsl::rrr_vector<127>* bits;
+    sdsl::rrr_vector<255>* bits;
 
     HashPair hashes;
     unsigned long num_hash;
