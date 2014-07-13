@@ -139,6 +139,7 @@ BloomTree* read_bloom_tree(
 
         node_info = Trim(node_info);
         if (node_info.size() == 0) continue;
+        std::cout << "Reading: " << node_info << std::endl;
         size_t level = node_info.find_first_not_of("*");
         node_info.erase(0, level);
 
