@@ -62,7 +62,7 @@ int process_options(int argc, char* argv[]) {
 // non-zero if bit is set
 inline char bit(char * buf, unsigned long bit) {
     char byte = buf[bit / 8];
-    char bit_mask = 1 << (7 - (bit % 8)); 
+    char bit_mask = 1 << (bit % 8); 
     return byte & bit_mask;
 }
 

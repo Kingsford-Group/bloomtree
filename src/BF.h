@@ -16,7 +16,6 @@ public:
     ~BF();
 
     void load();
-    void save();
 
     bool contains(const jellyfish::mer_dna & m);
     bool contains(const std::string & str);

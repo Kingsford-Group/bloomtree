@@ -28,6 +28,7 @@ bool BF::contains(const jellyfish::mer_dna & m) {
 
     for (unsigned long i = 0; i < num_hash; ++i) {
         const size_t pos = (base + i * inc) % bits->size();
+        std::cout << "pos=" << pos << std::endl;
         if ((*bits)[pos] == 0) return false;
     }
     return true;
@@ -38,10 +39,6 @@ bool BF::contains(const std::string & str) {
     return contains(jellyfish::mer_dna(str));
 }
 
-// save the bitvector to a file
-void BF::save() {
-    sdsl::store_to_file(*bits, filename); 
-}
 
 // read the bit vector and the matrices for the hash functions.
 void BF::load() {
