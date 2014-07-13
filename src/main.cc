@@ -89,6 +89,7 @@ int main(int argc, char* argv[]) {
             << std::endl;
         BloomTree* root = read_bloom_tree(bloom_tree_file, hashes, header.nb_hashes());
 
+        std::cout << "Querying..." << std::endl;
         query_from_file(root, query_file, std::cout);
 
     } else if (command == "convert") {

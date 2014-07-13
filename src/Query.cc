@@ -63,11 +63,12 @@ void query_from_file(
     ifstream in(fn);
     while (getline(in, line)) {
         line = Trim(line);
-        if (line.size() == 0) continue;
+        if (line.size() < jellyfish::mer_dna::k()) continue;
+
+        o << "*" << line << " " << out.size() << std::endl;
 
         query_string(root, line, out);
 
-        o << "*" << line << " " << out.size() << std::endl;
         for (const auto& n : out) {
             o << n->name() << std::endl;
         }
