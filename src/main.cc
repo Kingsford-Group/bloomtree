@@ -7,12 +7,14 @@
 #include <getopt.h>
 #include <jellyfish/file_header.hpp>
 
-/* TODO
+/* TODO:
+ * 1. Read hashes info from the root of the tree
+ * 2. Build a tree file from a collection of JF bloom filter
+ * 3. test the heap out for larger scale test
  */
 
 // various commandline filenames
 std::string command;
-std::string matrix_file;
 std::string bloom_tree_file;
 std::string query_file;
 std::string out_file;
@@ -27,7 +29,7 @@ static struct option LONG_OPTIONS[] = {
 void print_usage() {
     std::cerr 
         << "Usage: bt [query|convert] ...\n"
-        << "    \"query\" matrixfile bloomtreefile queryfile\n"
+        << "    \"query\" bloomtreefile queryfile\n"
         << "    \"convert\" jfbloomfilter outfile\n"
         << std::endl;
     exit(3);
@@ -46,10 +48,9 @@ int process_options(int argc, char* argv[]) {
     if (optind >= argc) print_usage();
     command = argv[optind];
     if (command == "query") {
-        if (optind >= argc-3) print_usage();
-        matrix_file = argv[optind+1];
-        bloom_tree_file = argv[optind+2];
-        query_file = argv[optind+3];
+        if (optind >= argc-2) print_usage();
+        bloom_tree_file = argv[optind+1];
+        query_file = argv[optind+2];
 
     } else if (command == "convert") {
         if (optind >= argc-2) print_usage();
@@ -72,22 +73,9 @@ int main(int argc, char* argv[]) {
     process_options(argc, argv);
 
     if (command == "query") {
-        std::cerr << "Loading hashes from " << matrix_file << std::endl; 
-        std::ifstream in(matrix_file.c_str(), std::ios::in | std::ios::binary);
-        jellyfish::file_header header(in);
-        DIE_IF(!in.good(), "Couldn't parse bloom filter header!");
-        HashPair hashes(header.matrix(1), header.matrix(2));
-        in.close();
-
-        auto k = header.key_len();
-        jellyfish::mer_dna::k(k / 2);
-        std::cerr << "Read hashes for k=" << jellyfish::mer_dna::k() 
-            << std::endl;
-        std::cerr << "# Hash applications=" << header.nb_hashes() << std::endl;
-
         std::cerr << "Loading bloom tree topology: " << bloom_tree_file 
             << std::endl;
-        BloomTree* root = read_bloom_tree(bloom_tree_file, hashes, header.nb_hashes());
+        BloomTree* root = read_bloom_tree(bloom_tree_file);
 
         std::cerr << "Querying..." << std::endl;
         query_from_file(root, query_file, std::cout);

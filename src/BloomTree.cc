@@ -14,10 +14,12 @@ BloomTree BF: only deals with SDSL vectors (possibly also gzipped)
 
 #include "BloomTree.h"
 #include "util.h"
+#include "BF.h"
 
 #include <fstream>
 #include <list>
 #include <cassert>
+#include <jellyfish/file_header.hpp>
 
 Heap<BloomTree> BloomTree::bf_cache;
 
@@ -34,8 +36,8 @@ BloomTree::BloomTree(
     parent(0),
     usage_count(0)
 {
-    children[0] = 0;
-    children[1] = 0;
+    children[0] = nullptr;
+    children[1] = nullptr;
 }
 
 // free the memory for this node.
@@ -85,12 +87,12 @@ void BloomTree::increment_usage() {
 void BloomTree::unload() { 
     // free the memory
     delete bloom_filter; 
-    bloom_filter = 0; 
+    bloom_filter = nullptr; 
 }
 
 // Loads the bloom filtering into memory
 bool BloomTree::load() {
-    if (bloom_filter == 0) {
+    if (bloom_filter == nullptr) {
         std::cerr << "Loading BF: " << filename << std::endl;
         if (bf_cache.size() > BF_INMEM_LIMIT) {
             // toss the bloom filter with the lowest usage
@@ -108,6 +110,23 @@ bool BloomTree::load() {
     return true;
 }
 
+
+void get_hash_function(const string & matrix_file, HashPair & hp, int & nh) {
+    std::cerr << "Loading hashes from " << matrix_file << std::endl; 
+    std::ifstream in(matrix_file.c_str(), std::ios::in | std::ios::binary);
+    jellyfish::file_header header(in);
+    DIE_IF(!in.good(), "Couldn't parse bloom filter header!");
+    HashPair hashes(header.matrix(1), header.matrix(2));
+    hp = hashes;
+    in.close();
+
+    nh = header.nb_hashes();
+    std::cerr << "# Hash applications=" << nh << std::endl;
+
+    jellyfish::mer_dna::k(header.key_len() / 2);
+    std::cerr << "Read hashes for k=" << jellyfish::mer_dna::k() << std::endl;
+}
+
 /* read a file that defines the bloom tree structure. The
    file has lines of the form:
     Root
@@ -122,11 +141,7 @@ bool BloomTree::load() {
    This function will return a pointer to the root of the
    constructed bloom tree.
 */
-BloomTree* read_bloom_tree(
-    const std::string & filename, 
-    HashPair & hashes,
-    int nh
-) {
+BloomTree* read_bloom_tree(const std::string & filename) {
     std::ifstream in(filename.c_str());
 
     std::list<BloomTree*> path;
@@ -149,24 +164,35 @@ BloomTree* read_bloom_tree(
 
         n++;
 
-        BloomTree* bn =  new BloomTree(bf_filename, hashes, nh); 
+        HashPair hashes;
+        int num_hashes = 0;
+        BloomTree* bn = nullptr;
+
         // if we're at the root
         if (path.size() == 0) {
             DIE_IF(level != 0, "Root must start in column 0");
             DIE_IF(tree_root != 0, "Can't set root twice!");
+
+            // set the hash function up
+            get_hash_function(bf_filename, hashes, num_hashes);
+
+            // create the root node
+            bn = new BloomTree(bf_filename, hashes, num_hashes); 
             tree_root = bn;
             
         // if we're adding a child
         } else {
+            bn =  new BloomTree(bf_filename, hashes, num_hashes); 
+
             while (path.size() >= level) {
                 path.pop_back();
             }
             DIE_IF(level != path.size()+1, 
                 "Must increase level by <= 1");
 
-            if (path.back()->child(0) == 0) {
+            if (path.back()->child(0) == nullptr) {
                 path.back()->set_child(0, bn);
-            } else if (path.back()->child(1) == 0) {
+            } else if (path.back()->child(1) == nullptr) {
                 path.back()->set_child(1, bn);
             } else {
                 DIE("Tried to add >= 2 children to a node.");

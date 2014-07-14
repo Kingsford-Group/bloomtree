@@ -38,6 +38,6 @@ private:
     Heap<BloomTree>::heap_reference heap_ref;
 };
 
-BloomTree* read_bloom_tree(const std::string & filename, HashPair & hashes, int nh);
+BloomTree* read_bloom_tree(const std::string & filename);
 
 #endif
