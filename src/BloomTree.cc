@@ -174,7 +174,8 @@ BloomTree* read_bloom_tree(const std::string & filename) {
             DIE_IF(tree_root != 0, "Can't set root twice!");
 
             // set the hash function up
-            get_hash_function(bf_filename, hashes, num_hashes);
+            DIE_IF(fields.size() < 2, "Must specify hash file for root.");
+            get_hash_function(fields[1], hashes, num_hashes);
 
             // create the root node
             bn = new BloomTree(bf_filename, hashes, num_hashes); 
@@ -182,7 +183,7 @@ BloomTree* read_bloom_tree(const std::string & filename) {
             
         // if we're adding a child
         } else {
-            bn =  new BloomTree(bf_filename, hashes, num_hashes); 
+            bn = new BloomTree(bf_filename, hashes, num_hashes); 
 
             while (path.size() >= level) {
                 path.pop_back();
