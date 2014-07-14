@@ -13,31 +13,37 @@ class BloomTree {
 public:
     BloomTree(const std::string & f, HashPair hp, int nh);
     ~BloomTree();
-    BloomTree* child(int which);
+    std::string name() const;
+
+    BloomTree* child(int which) const;
     void set_child(int which, BloomTree* c);
-    BF* bf();
 
-    std::string name();
+    BF* bf() const;
 
-    int usage();
+    BloomTree* union_bloom_filters(const std::string & new_name, BloomTree* f2) const;
+
+    int usage() const;
     void increment_usage();
 
 private:
-    bool load();
-    void unload();
+    bool load() const;
+    void unload() const;
 
-    static Heap<BloomTree> bf_cache;
+    static Heap<const BloomTree> bf_cache;
 
     std::string filename;
     HashPair hashes;
     int num_hash;
-    BF* bloom_filter;
+    mutable BF* bloom_filter;
+    mutable Heap<const BloomTree>::heap_reference heap_ref;
+
     BloomTree* children[2];
     BloomTree* parent;
     int usage_count;
-    Heap<BloomTree>::heap_reference heap_ref;
 };
 
+HashPair* get_hash_function(const std::string & matrix_file, int & nh);
 BloomTree* read_bloom_tree(const std::string & filename);
+void write_bloom_tree(const std::string & outfile, BloomTree* root, const std::string & matrix_file);
 
 #endif

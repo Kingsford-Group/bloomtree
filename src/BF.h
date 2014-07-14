@@ -7,7 +7,7 @@
 #include <jellyfish/mer_dna_bloom_counter.hpp>
 #include "Kmers.h"
 
-typedef jellyfish::hash_pair<jellyfish::mer_dna> HashPair;
+using HashPair = jellyfish::hash_pair<jellyfish::mer_dna>;
 
 // a kmer bloom filter
 class BF {
@@ -17,12 +17,13 @@ public:
 
     void load();
 
-    bool contains(const jellyfish::mer_dna & m);
-    bool contains(const std::string & str);
+    bool contains(const jellyfish::mer_dna & m) const;
+    bool contains(const std::string & str) const;
+
+    BF* union_with(const std::string & new_name, const BF* f2) const;
 
 private:
     std::string filename;
-    std::string matrix_file;
     sdsl::rrr_vector<255>* bits;
 
     HashPair hashes;

@@ -1,16 +1,18 @@
 #include "Query.h"
+#include "Build.h"
 #include "BloomTree.h"
 #include "BF.h"
 #include "util.h"
 
 #include <string>
 #include <getopt.h>
-#include <jellyfish/file_header.hpp>
 
 /* TODO:
- * 1. Read hashes info from the root of the tree
  * 2. Build a tree file from a collection of JF bloom filter
+ *
+ * (given leaves, build the 
  * 3. test the heap out for larger scale test
+ * 4. make some constants be options
  */
 
 // various commandline filenames
@@ -28,9 +30,10 @@ static struct option LONG_OPTIONS[] = {
 
 void print_usage() {
     std::cerr 
-        << "Usage: bt [query|convert] ...\n"
+        << "Usage: bt [query|convert|build] ...\n"
         << "    \"query\" bloomtreefile queryfile\n"
         << "    \"convert\" jfbloomfilter outfile\n"
+        << "    \"build\" filterlistfile matrix_file outfile\n"
         << std::endl;
     exit(3);
 }
@@ -56,16 +59,16 @@ int process_options(int argc, char* argv[]) {
         if (optind >= argc-2) print_usage();
         jfbloom_file = argv[optind+1];
         out_file = argv[optind+2];
+    } else if (command == "build") {
+        if (optind >= argc-3) print_usage();
+        query_file = argv[optind+1];
+        jfbloom_file = argv[optind+2];
+        bloom_tree_file = argv[optind+3];
     }
     return optind;
 }
 
-// non-zero if bit is set
-inline char bit(char * buf, unsigned long bit) {
-    char byte = buf[bit / 8];
-    char bit_mask = 1 << (bit % 8); 
-    return byte & bit_mask;
-}
+
 
 int main(int argc, char* argv[]) {
     std::cerr << "Starting Bloom Tree" << std::endl;
@@ -81,40 +84,14 @@ int main(int argc, char* argv[]) {
         query_from_file(root, query_file, std::cout);
 
     } else if (command == "convert") {
-        // Load the JF Bloom Filter
-        std::cerr << "Reading: " << jfbloom_file << std::endl;
-        std::ifstream in(jfbloom_file.c_str(), std::ios::in|std::ios::binary);
-        DIE_IF(!in.good(), "Couldn't open jellyfish bloom filter");
-        jellyfish::file_header header(in);
+        std::cerr << "Converting..." << std::endl;
+        convert_jfbloom_to_rrr(jfbloom_file, out_file);
 
-        // length = # of bits; num_bytes = # of bytes
-        auto length = header.size();
-        auto num_bytes = length / 8 + (length % 8 != 0);
-
-        std::cerr << "BF length = " << length << " bits, occupying "
-            << num_bytes << " bytes" << std::endl; 
-
-        // suck in the bits from the bf
-        char * buf = new char[num_bytes];
-        in.read(buf, num_bytes);
-        in.close();
-        
-        // Create a new SDSL bitvector
-        sdsl::bit_vector b(length, 0);
-        for (unsigned long i = 0; i < length; i++) {
-            if (bit(buf, i)) {
-                b[i] = 1;
-            }
-        }
-        
-        // covert that raw bit vector into an rrr compressed vector &
-        // save it.
-        sdsl::rrr_vector<255> rrr(b);
-        std::cerr << "Compressed RRR vector is " 
-            << sdsl::size_in_mega_bytes(rrr) << std::endl;
-        sdsl::store_to_file(rrr, out_file);
-
-        delete buf;
+    } else if (command == "build") {
+        std::cerr << "Building..." << std::endl;
+        vector<std::string> leaves = read_filter_list(query_file);
+        build_bloom_tree_filters(leaves, jfbloom_file, out_file);
     }
     std::cerr << "Done." << std::endl;
 }
+

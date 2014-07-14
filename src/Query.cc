@@ -2,7 +2,7 @@
 #include "Kmers.h"
 #include "util.h"
 
-const float QUERY_THRESHOLD = 0.8;
+constexpr float QUERY_THRESHOLD = 0.8;
 
 // return true if the filter at this node contains > QUERY_THRESHOLD kmers
 bool query_passes(BloomTree* root, const std::set<jellyfish::mer_dna> & q) {

@@ -1,17 +1,3 @@
-/*
-(1) bf tree (done)
-(2) priority queue (done)
-(3) query (done)
-
-(4) build / load the BF (could read gzipped JF into RRR?)
-
-SDSL RRR:
-
-convert: reads JF BF and writes out SDSL RRR vector
-BloomTree BF: only deals with SDSL vectors (possibly also gzipped)
-
-*/
-
 #include "BloomTree.h"
 #include "util.h"
 #include "BF.h"
@@ -21,7 +7,7 @@ BloomTree BF: only deals with SDSL vectors (possibly also gzipped)
 #include <cassert>
 #include <jellyfish/file_header.hpp>
 
-Heap<BloomTree> BloomTree::bf_cache;
+Heap<const BloomTree> BloomTree::bf_cache;
 
 // construct a bloom filter with the given filter backing.
 BloomTree::BloomTree(
@@ -45,12 +31,12 @@ BloomTree::~BloomTree() {
     unload();
 }
 
-std::string BloomTree::name() {
+std::string BloomTree::name() const {
     return filename;
 }
 
 // Return the node for the given child
-BloomTree* BloomTree::child(int which) { 
+BloomTree* BloomTree::child(int which) const { 
     assert(which >= 0 || which < 2);
     return children[which]; 
 }
@@ -63,13 +49,13 @@ void BloomTree::set_child(int which, BloomTree* c) {
 }
 
 // return the bloom filter, loading first if necessary
-BF* BloomTree::bf() {
+BF* BloomTree::bf() const {
     load();
     return bloom_filter;
 }
 
 // return the number of times this bloom filter has been used.
-int BloomTree::usage() {
+int BloomTree::usage() const {
     return usage_count;
 }
 
@@ -84,19 +70,19 @@ void BloomTree::increment_usage() {
 }
 
 // Frees the memory associated with the bloom filter
-void BloomTree::unload() { 
+void BloomTree::unload() const { 
     // free the memory
     delete bloom_filter; 
     bloom_filter = nullptr; 
 }
 
 // Loads the bloom filtering into memory
-bool BloomTree::load() {
+bool BloomTree::load() const {
     if (bloom_filter == nullptr) {
         std::cerr << "Loading BF: " << filename << std::endl;
         if (bf_cache.size() > BF_INMEM_LIMIT) {
             // toss the bloom filter with the lowest usage
-            BloomTree* loser = bf_cache.pop();
+            const BloomTree* loser = bf_cache.pop();
             loser->heap_ref.invalidate();
 
             std::cerr << "Unloading BF: " << loser->filename << std::endl;
@@ -110,8 +96,17 @@ bool BloomTree::load() {
     return true;
 }
 
+// Create a new node that is the union of the bloom filters
+// in two other nodes;
+BloomTree* BloomTree::union_bloom_filters(const std::string & new_name, BloomTree* f2) const {
+    // move the union op into BloomTree?
+    BloomTree* bt = new BloomTree(new_name, hashes, num_hash);
+    bt->bloom_filter = bf()->union_with(new_name, f2->bf()); 
+    return bt; 
+}
 
-HashPair* get_hash_function(const string & matrix_file, int & nh) {
+
+HashPair* get_hash_function(const std::string & matrix_file, int & nh) {
     std::cerr << "Loading hashes from " << matrix_file << std::endl; 
     std::ifstream in(matrix_file.c_str(), std::ios::in | std::ios::binary);
     jellyfish::file_header header(in);
@@ -126,6 +121,7 @@ HashPair* get_hash_function(const string & matrix_file, int & nh) {
     std::cerr << "Read hashes for k=" << jellyfish::mer_dna::k() << std::endl;
     return hp;
 }
+
 
 /* read a file that defines the bloom tree structure. The
    file has lines of the form:
@@ -147,7 +143,7 @@ BloomTree* read_bloom_tree(const std::string & filename) {
     std::list<BloomTree*> path;
     BloomTree* tree_root = 0;
     int n = 0;
-    HashPair *hashes;
+    HashPair* hashes;
     int num_hashes = 0;
 
     std::string node_info;
@@ -205,5 +201,29 @@ BloomTree* read_bloom_tree(const std::string & filename) {
     std::cerr << "Read " << n << " nodes in Bloom Tree" << std::endl;
     
     return tree_root;
+}
+
+void write_bloom_tree_helper(std::ostream & out, BloomTree* root, int level=0) {
+    std::string lstr(level, '*');
+
+    out << lstr << root->child(0)->name() << std::endl;
+    write_bloom_tree_helper(out, root->child(0), level+1);
+
+    out << lstr << root->child(1)->name() << std::endl;
+    write_bloom_tree_helper(out, root->child(1), level+1);
+}
+
+// write the bloom tree file format in a way that can be read by
+// read_bloom_tree()
+void write_bloom_tree(
+    const std::string & outfile, 
+    BloomTree* root, 
+    const string & matrix_file
+) {
+    std::ofstream out(outfile.c_str());
+
+    out << root->name() << "," << matrix_file << std::endl;
+
+    write_bloom_tree_helper(out, root);
 }
 

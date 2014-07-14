@@ -17,7 +17,8 @@ BF::~BF() {
     delete bits;
 }
 
-bool BF::contains(const jellyfish::mer_dna & m) {
+// returns true iff the bloom filter contains the given kmer
+bool BF::contains(const jellyfish::mer_dna & m) const {
     uint64_t h0 = hashes.m1.times(m);
     uint64_t h1 = hashes.m2.times(m);
 
@@ -35,7 +36,7 @@ bool BF::contains(const jellyfish::mer_dna & m) {
 }
 
 // convience function
-bool BF::contains(const std::string & str) {
+bool BF::contains(const std::string & str) const {
     return contains(jellyfish::mer_dna(str));
 }
 
@@ -48,4 +49,25 @@ void BF::load() {
 }
 
 
+// create a new RRR bloom filter that is the union of this BF and the given BF.
+// Will re-use the hashes from this and both BFs must use exactly the same hash
+// (not checked).
+BF* BF::union_with(const std::string & new_name, const BF* f2) const {
+    assert(bits->size() == f2->size());
+
+    // create an uncompressed version of this bf
+    sdsl::bit_vector b(bits->size(), 0);
+
+    // union it with f2
+    for (std::size_t i = 0; i < b.size(); i++) {
+        b[i] = (*bits)[i] | (*f2->bits)[i];
+    }
+
+    // create a new BF wraper for the new BF
+    BF* out = new BF(new_name, hashes, num_hash);
+
+    // "load" the new BF by converting it to a RRR
+    out->bits = new sdsl::rrr_vector<255>(b);
+    return out;
+}
 
