@@ -111,13 +111,12 @@ bool BloomTree::load() {
 }
 
 
-void get_hash_function(const string & matrix_file, HashPair & hp, int & nh) {
+HashPair* get_hash_function(const string & matrix_file, int & nh) {
     std::cerr << "Loading hashes from " << matrix_file << std::endl; 
     std::ifstream in(matrix_file.c_str(), std::ios::in | std::ios::binary);
     jellyfish::file_header header(in);
     DIE_IF(!in.good(), "Couldn't parse bloom filter header!");
-    HashPair hashes(header.matrix(1), header.matrix(2));
-    hp = hashes;
+    HashPair * hp = new HashPair(header.matrix(1), header.matrix(2));
     in.close();
 
     nh = header.nb_hashes();
@@ -125,6 +124,7 @@ void get_hash_function(const string & matrix_file, HashPair & hp, int & nh) {
 
     jellyfish::mer_dna::k(header.key_len() / 2);
     std::cerr << "Read hashes for k=" << jellyfish::mer_dna::k() << std::endl;
+    return hp;
 }
 
 /* read a file that defines the bloom tree structure. The
@@ -147,13 +147,13 @@ BloomTree* read_bloom_tree(const std::string & filename) {
     std::list<BloomTree*> path;
     BloomTree* tree_root = 0;
     int n = 0;
+    HashPair *hashes;
+    int num_hashes = 0;
 
     std::string node_info;
     while (getline(in, node_info)) {
-
         node_info = Trim(node_info);
         if (node_info.size() == 0) continue;
-        std::cerr << "Reading BN info: " << node_info << std::endl;
         size_t level = node_info.find_first_not_of("*");
         node_info.erase(0, level);
 
@@ -161,11 +161,10 @@ BloomTree* read_bloom_tree(const std::string & filename) {
         std::vector<std::string> fields;
         SplitString(node_info, ',', fields);
         std::string bf_filename = fields[0];
+        std::cerr << "Reading BN info: " << bf_filename << std::endl;
 
         n++;
 
-        HashPair hashes;
-        int num_hashes = 0;
         BloomTree* bn = nullptr;
 
         // if we're at the root
@@ -175,15 +174,15 @@ BloomTree* read_bloom_tree(const std::string & filename) {
 
             // set the hash function up
             DIE_IF(fields.size() < 2, "Must specify hash file for root.");
-            get_hash_function(fields[1], hashes, num_hashes);
+            hashes = get_hash_function(fields[1], num_hashes);
 
             // create the root node
-            bn = new BloomTree(bf_filename, hashes, num_hashes); 
+            bn = new BloomTree(bf_filename, *hashes, num_hashes); 
             tree_root = bn;
             
         // if we're adding a child
         } else {
-            bn = new BloomTree(bf_filename, hashes, num_hashes); 
+            bn = new BloomTree(bf_filename, *hashes, num_hashes); 
 
             while (path.size() >= level) {
                 path.pop_back();
@@ -201,6 +200,7 @@ BloomTree* read_bloom_tree(const std::string & filename) {
         }
         path.push_back(bn);
     }
+    delete hashes;
 
     std::cerr << "Read " << n << " nodes in Bloom Tree" << std::endl;
     
