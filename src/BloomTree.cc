@@ -186,12 +186,11 @@ BloomTree* read_bloom_tree(const std::string & filename) {
         } else {
             bn = new BloomTree(bf_filename, *hashes, num_hashes); 
 
-            while (path.size() >= level) {
+            while (path.size() > level) {
                 path.pop_back();
             }
-            DIE_IF(level != path.size()+1, 
+            DIE_IF(level != path.size(), 
                 "Must increase level by <= 1");
-            std::cerr << "Parent = " << path.back()->name() << std::endl;
 
             if (path.back()->child(0) == nullptr) {
                 path.back()->set_child(0, bn);
