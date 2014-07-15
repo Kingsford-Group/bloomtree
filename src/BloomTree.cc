@@ -9,6 +9,7 @@
 #include <jellyfish/file_header.hpp>
 
 Heap<const BloomTree> BloomTree::bf_cache;
+int BF_INMEM_LIMIT = 32;
 
 // construct a bloom filter with the given filter backing.
 BloomTree::BloomTree(
@@ -185,7 +186,7 @@ BloomTree* read_bloom_tree(const std::string & filename) {
         } else {
             bn = new BloomTree(bf_filename, *hashes, num_hashes); 
 
-            while (path.size() >= level) {
+            while (path.size() > level) {
                 path.pop_back();
             }
             DIE_IF(level != path.size()+1, 
@@ -208,7 +209,7 @@ BloomTree* read_bloom_tree(const std::string & filename) {
     return tree_root;
 }
 
-void write_bloom_tree_helper(std::ostream & out, BloomTree* root, int level=0) {
+void write_bloom_tree_helper(std::ostream & out, BloomTree* root, int level=1) {
     std::string lstr(level, '*');
 
     for (int i = 0; i < 2; i++) {

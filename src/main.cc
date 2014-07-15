@@ -5,14 +5,11 @@
 #include "util.h"
 
 #include <string>
+#include <cstdlib>
 #include <getopt.h>
 
 /* TODO:
- * 2. Build a tree file from a collection of JF bloom filter
- *
- * (given leaves, build the 
  * 3. test the heap out for larger scale test
- * 4. make some constants be options
  */
 
 // various commandline filenames
@@ -22,16 +19,18 @@ std::string query_file;
 std::string out_file;
 std::string jfbloom_file;
 
-const char * OPTIONS = "";
+const char * OPTIONS = "t:";
 
 static struct option LONG_OPTIONS[] = {
-     {0,0,0,0}
+    {"max-filters", required_argument, &BF_INMEM_LIMIT, 0},
+    {"query-threshold", required_argument, 0, 't'},
+    {0,0,0,0}
 };
 
 void print_usage() {
     std::cerr 
         << "Usage: bt [query|convert|build] ...\n"
-        << "    \"query\" bloomtreefile queryfile\n"
+        << "    \"query\" [--max-filters 32] [-t 0.8] bloomtreefile queryfile\n"
         << "    \"convert\" jfbloomfilter outfile\n"
         << "    \"build\" filterlistfile outfile\n"
         << std::endl;
@@ -42,6 +41,9 @@ int process_options(int argc, char* argv[]) {
     int a;
     while ((a=getopt_long(argc, argv, OPTIONS, LONG_OPTIONS, 0)) != -1) {
         switch(a) {
+            case 't':
+                QUERY_THRESHOLD = atof(optarg);
+                break;
             default:
                 std::cerr << "Unknown option." << std::endl;
                 print_usage();

@@ -7,6 +7,9 @@
 #include <iostream>
 
 #include "BloomTree.h"
+
+extern float QUERY_THRESHOLD;
+
 void query_from_file(
     BloomTree* root, 
     const std::string & fn,

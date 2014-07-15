@@ -7,7 +7,7 @@
 #include "BF.h"
 
 // this is the max number of BF allowed in memory at once.
-static const int BF_INMEM_LIMIT = 32;
+extern int BF_INMEM_LIMIT;
 
 class BloomTree {
 public:
