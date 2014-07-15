@@ -163,7 +163,7 @@ BloomTree* read_bloom_tree(const std::string & filename) {
         std::vector<std::string> fields;
         SplitString(node_info, ',', fields);
         std::string bf_filename = fields[0];
-        std::cerr << "Reading BN info: " << bf_filename << std::endl;
+        std::cerr << "Reading BN info: " << bf_filename << " level = " << level << std::endl;
 
         n++;
 
@@ -186,7 +186,7 @@ BloomTree* read_bloom_tree(const std::string & filename) {
         } else {
             bn = new BloomTree(bf_filename, *hashes, num_hashes); 
 
-            while (path.size() > level) {
+            while (path.size() >= level) {
                 path.pop_back();
             }
             DIE_IF(level != path.size()+1, 
