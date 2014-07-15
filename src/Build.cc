@@ -89,7 +89,7 @@ unsigned number_nodes_in_complete_tree(unsigned n) {
 sdsl::bit_vector* union_bv(const sdsl::bit_vector& b1, const sdsl::bit_vector& b2) {
     sdsl::bit_vector* out = new sdsl::bit_vector(b1.size(), 0);
     for (std::size_t i = 0; i < b1.size(); i++) {
-        out[i] = b1[i] | b2[i];
+        (*out)[i] = b1[i] | b2[i];
     }
     return out;
 }
@@ -163,6 +163,7 @@ sdsl::bit_vector* build_filters(
     }
     
     // convert and save compressed version
+    std::cerr << "Compressing to " << union_name << std::endl;
     sdsl::rrr_vector<255> rrr(*u);
     sdsl::store_to_file(rrr, union_name);
     std::cerr << "Compressed RRR vector is " << sdsl::size_in_mega_bytes(rrr) << std::endl; 
