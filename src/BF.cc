@@ -58,8 +58,10 @@ BF* BF::union_with(const std::string & new_name, const BF* f2) const {
     // create an uncompressed version of this bf
     sdsl::bit_vector b(bits->size(), 0);
 
+    std::cerr << "Performing OR..." << std::endl;
+
     // union it with f2
-    for (std::size_t i = 0; i < b.size(); i++) {
+    for (unsigned long i = 0; i < b.size(); i++) {
         b[i] = (*bits)[i] | (*f2->bits)[i];
     }
 
