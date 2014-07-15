@@ -20,7 +20,7 @@ public:
 
     BF* bf() const;
 
-    BloomTree* union_bloom_filters(const std::string & new_name, BloomTree* f2) const;
+    //BloomTree* union_bloom_filters(const std::string & new_name, BloomTree* f2) const;
 
     int usage() const;
     void increment_usage();

@@ -33,7 +33,7 @@ void print_usage() {
         << "Usage: bt [query|convert|build] ...\n"
         << "    \"query\" bloomtreefile queryfile\n"
         << "    \"convert\" jfbloomfilter outfile\n"
-        << "    \"build\" filterlistfile matrix_file outfile\n"
+        << "    \"build\" filterlistfile outfile\n"
         << std::endl;
     exit(3);
 }
@@ -59,11 +59,11 @@ int process_options(int argc, char* argv[]) {
         if (optind >= argc-2) print_usage();
         jfbloom_file = argv[optind+1];
         out_file = argv[optind+2];
+
     } else if (command == "build") {
-        if (optind >= argc-3) print_usage();
+        if (optind >= argc-2) print_usage();
         query_file = argv[optind+1];
-        jfbloom_file = argv[optind+2];
-        bloom_tree_file = argv[optind+3];
+        bloom_tree_file = argv[optind+2];
     }
     return optind;
 }
@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
     } else if (command == "build") {
         std::cerr << "Building..." << std::endl;
         vector<std::string> leaves = read_filter_list(query_file);
-        build_bloom_tree_filters(leaves, jfbloom_file, out_file);
+        build_bt_from_jfbloom(leaves, out_file);
     }
     std::cerr << "Done." << std::endl;
 }

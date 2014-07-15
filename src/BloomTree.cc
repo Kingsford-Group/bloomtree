@@ -97,15 +97,18 @@ bool BloomTree::load() const {
     return true;
 }
 
+/*
 // Create a new node that is the union of the bloom filters
 // in two other nodes;
 BloomTree* BloomTree::union_bloom_filters(const std::string & new_name, BloomTree* f2) const {
     // move the union op into BloomTree?
     BloomTree* bt = new BloomTree(new_name, hashes, num_hash);
     bt->bloom_filter = bf()->union_with(new_name, f2->bf()); 
+    bt->set_child(0, this);
+    bt->set_child(1, f2);
     return bt; 
 }
-
+*/
 
 HashPair* get_hash_function(const std::string & matrix_file, int & nh) {
     std::cerr << "Loading hashes from " << matrix_file << std::endl; 
