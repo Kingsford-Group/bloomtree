@@ -10,6 +10,8 @@
 
 using namespace std;
 
+std::string basename(const string & str, const string & suff = "");
+
 
 //
 // Print the elements of a map nicely

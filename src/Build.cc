@@ -143,7 +143,7 @@ sdsl::bit_vector* build_filters(
         union_name = leaves[tree.size() - pos - 1];
         u = read_bit_vector_from_jf(union_name);
 
-        union_name = union_name + ".rrr";
+        union_name = basename(union_name, ".gz") + ".rrr";
         tree[pos] = new BloomTree(union_name, hashes, nh);
 
     } else {
