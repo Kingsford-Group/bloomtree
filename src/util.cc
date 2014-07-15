@@ -64,16 +64,6 @@ SplitString(
   return fields.size();
 }
 
-// removes the directory name and optionally the given suffix.
-std::string basename(const string & str, const string & suff) {
-    auto p = str.rfind("/");
-    std::string s = (p == std::string::npos) ? str : str.substr(p+1);
-    auto end = s.size() - suff.size();
-    if (str.substr(end) == suff) {
-        return str.substr(0, str.size() - suff.size());
-    }
-    return s;
-}
 
 
 string

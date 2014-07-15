@@ -93,6 +93,17 @@ sdsl::bit_vector* union_bv(const sdsl::bit_vector& b1, const sdsl::bit_vector& b
     return out;
 }
 
+// removes the directory name and optionally the given suffix.
+std::string basename(const string & str, const string & suff) {
+    auto p = str.rfind("/");
+    std::string s = (p == std::string::npos) ? str : str.substr(p+1);
+    auto end = s.size() - suff.size();
+    if (str.substr(end) == suff) {
+        return str.substr(0, str.size() - suff.size());
+    }
+    return s;
+}
+
 // do a post-order traversal over the array-based "tree"
 sdsl::bit_vector* build_filters(
     const std::vector<std::string> & leaves,
@@ -143,7 +154,7 @@ sdsl::bit_vector* build_filters(
         union_name = leaves[tree.size() - pos - 1];
         u = read_bit_vector_from_jf(union_name);
 
-        union_name = basename(union_name, ".gz") + ".rrr";
+        union_name = basename(union_name, std::string(".gz")) + ".rrr";
         tree[pos] = new BloomTree(union_name, hashes, nh);
 
     } else {
