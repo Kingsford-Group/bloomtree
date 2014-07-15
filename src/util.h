@@ -10,7 +10,7 @@
 
 using namespace std;
 
-std::string basename(const string & str, const string & suff = "");
+std::string basename(const string & str, const string & suff);
 
 
 //
