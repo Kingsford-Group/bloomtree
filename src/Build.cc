@@ -65,6 +65,7 @@ std::vector<std::string> read_filter_list(const std::string & inf) {
     while(getline(in, line)) {
         v.emplace_back(Trim(line));
     }
+    std::cerr << "Building tree on " << v.size() << " bloom filters." << std::endl;
     return v;
 }
 

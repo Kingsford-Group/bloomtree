@@ -1,6 +1,7 @@
 #include "BloomTree.h"
 #include "util.h"
 #include "BF.h"
+#include "gzstream.h"
 
 #include <fstream>
 #include <list>
@@ -112,7 +113,7 @@ BloomTree* BloomTree::union_bloom_filters(const std::string & new_name, BloomTre
 
 HashPair* get_hash_function(const std::string & matrix_file, int & nh) {
     std::cerr << "Loading hashes from " << matrix_file << std::endl; 
-    std::ifstream in(matrix_file.c_str(), std::ios::in | std::ios::binary);
+    igzstream in(matrix_file.c_str(), std::ios::in | std::ios::binary);
     jellyfish::file_header header(in);
     DIE_IF(!in.good(), "Couldn't parse bloom filter header!");
     HashPair * hp = new HashPair(header.matrix(1), header.matrix(2));
