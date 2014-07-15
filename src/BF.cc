@@ -10,7 +10,6 @@ BF::BF(const std::string & f, HashPair hp, int nh) :
     hashes(hp),
     num_hash(nh)
 { 
-    load();
 }
 
 BF::~BF() {
@@ -58,7 +57,7 @@ BF* BF::union_with(const std::string & new_name, const BF* f2) const {
     // create an uncompressed version of this bf
     sdsl::bit_vector b(bits->size(), 0);
 
-    std::cerr << "Performing OR..." << std::endl;
+    std::cerr << "Performing OR... (size " << b.size() << " )" << std::endl;
 
     // union it with f2
     for (unsigned long i = 0; i < b.size(); i++) {
@@ -66,9 +65,11 @@ BF* BF::union_with(const std::string & new_name, const BF* f2) const {
     }
 
     // create a new BF wraper for the new BF
+    std::cerr << "Building BF object..." << std::endl;
     BF* out = new BF(new_name, hashes, num_hash);
 
     // "load" the new BF by converting it to a RRR
+    std::cerr << "Building RRR vector..." << std::endl;
     out->bits = new sdsl::rrr_vector<255>(b);
     return out;
 }

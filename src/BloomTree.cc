@@ -91,6 +91,7 @@ bool BloomTree::load() const {
             
         // read the BF file and set bloom_filter
         bloom_filter = new BF(filename, hashes, num_hash);
+        bloom_filter->load();
         heap_ref = bf_cache.insert(this, usage());
     }
     return true;
