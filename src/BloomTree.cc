@@ -143,7 +143,7 @@ BloomTree* read_bloom_tree(const std::string & filename) {
     std::list<BloomTree*> path;
     BloomTree* tree_root = 0;
     int n = 0;
-    HashPair* hashes;
+    HashPair* hashes = nullptr;
     int num_hashes = 0;
 
     std::string node_info;

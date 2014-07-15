@@ -29,8 +29,6 @@ std::size_t complete_tree_child(std::size_t i, unsigned child) {
 }
 
 
-
-
 // builds a near-complete bt (the last level might be only partially full)
 // with the given bf as the leaves
 void build_bloom_tree_filters(
@@ -46,10 +44,12 @@ void build_bloom_tree_filters(
     unsigned lp2 = int(log2(fs.size()));  // largest power of 2 <= n
     unsigned nb_nodes = (2*lp2 - 1) + 2*(fs.size()-lp2);
 
+    std::cerr << "Tree will have " << nb_nodes << " nodes" << std::endl;
     // v holds the nodes of the semi-complete tree
     std::vector<BloomTree*> v(nb_nodes, nullptr);
 
     // create the leaves
+    std::cerr << "Creating leaves..." << std::endl;
     int i = int(v.size()-1); // must be signed for subsequent loop!
     for (const auto & s : fs) {
         v[i--] = new BloomTree(s, *hashes, nh);
@@ -60,6 +60,7 @@ void build_bloom_tree_filters(
     for (; i >= 0; i--) {
         sprintf(buf, "union%d.rrr", i);
         std::string new_name = buf;
+        std::cerr << "Creating union: " << i << " " << new_name << std::endl;
 
         v[i] = v[complete_tree_child(i, 0)]->union_bloom_filters(
             new_name,
