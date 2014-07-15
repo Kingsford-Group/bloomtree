@@ -63,7 +63,7 @@ int process_options(int argc, char* argv[]) {
     } else if (command == "build") {
         if (optind >= argc-2) print_usage();
         query_file = argv[optind+1];
-        bloom_tree_file = argv[optind+2];
+        out_file = argv[optind+2];
     }
     return optind;
 }
