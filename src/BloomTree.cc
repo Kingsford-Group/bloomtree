@@ -211,11 +211,12 @@ BloomTree* read_bloom_tree(const std::string & filename) {
 void write_bloom_tree_helper(std::ostream & out, BloomTree* root, int level=0) {
     std::string lstr(level, '*');
 
-    out << lstr << root->child(0)->name() << std::endl;
-    write_bloom_tree_helper(out, root->child(0), level+1);
-
-    out << lstr << root->child(1)->name() << std::endl;
-    write_bloom_tree_helper(out, root->child(1), level+1);
+    for (int i = 0; i < 2; i++) {
+        if (root->child(i) != nullptr) {
+            out << lstr << root->child(i)->name() << std::endl;
+            write_bloom_tree_helper(out, root->child(i), level+1);
+        }
+    }
 }
 
 // write the bloom tree file format in a way that can be read by
