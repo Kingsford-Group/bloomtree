@@ -229,5 +229,6 @@ void write_bloom_tree(
     std::ofstream out(outfile.c_str());
     out << root->name() << "," << matrix_file << std::endl;
     write_bloom_tree_helper(out, root);
+    std::cerr << "Done." << std::endl;
 }
 
