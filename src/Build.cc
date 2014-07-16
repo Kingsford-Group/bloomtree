@@ -43,6 +43,7 @@ sdsl::bit_vector* read_bit_vector_from_jf(const std::string & jfbloom_file) {
             (*b)[i] = 1;
         }
     }
+    delete buf;
     return b;
 }
 
