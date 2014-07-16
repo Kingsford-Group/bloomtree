@@ -10,6 +10,7 @@
 
 /* TODO:
  * 3. test the heap out for larger scale test
+ * 4. parallelize building by startign at grandchidlren of root
  */
 
 // various commandline filenames

@@ -193,12 +193,15 @@ void build_bt_from_jfbloom(
 
     // v holds the nodes of the semi-complete tree
     std::vector<BloomTree*> v(nb_nodes, nullptr);
-    auto u = build_filters(leaves, v, *hashes, nh, 0);
+    sdsl::bit_vector *u = build_filters(leaves, v, *hashes, nh, 0);
     std::cerr << "Built the whole tree." << std::endl;
-    delete u;
     write_bloom_tree(outf, v[0], leaves[0]);
+
+    // save uncompressed root for later merging
+    sdsl::store_to_file(u, outf + ".root");
     
     // free the memory for the bloom nodes
+    delete u;
     for (auto & p : v) {
         delete p;
     }
