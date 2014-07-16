@@ -163,11 +163,18 @@ sdsl::bit_vector* build_filters(
         DIE("Should not happen.");
     }
     
-    // convert and save compressed version
-    std::cerr << "Compressing to " << union_name << std::endl;
-    sdsl::rrr_vector<255> rrr(*u);
-    sdsl::store_to_file(rrr, union_name);
-    std::cerr << "Compressed RRR vector is " << sdsl::size_in_mega_bytes(rrr) << std::endl; 
+    // compress and write it out if it doesn't already exist
+    ifstream check(union_name.c_str());
+    if (!check) {
+        // convert and save compressed version
+        std::cerr << "Compressing to " << union_name << std::endl;
+        sdsl::rrr_vector<255> rrr(*u);
+        sdsl::store_to_file(rrr, union_name);
+        std::cerr << "Compressed RRR vector is " << sdsl::size_in_mega_bytes(rrr) << std::endl; 
+    } else {
+        check.close();
+        std::cerr << "Skipping compression because " << union_name << " already exists." << std::endl;
+    }
 
     return u;
 }
