@@ -145,6 +145,8 @@ sdsl::bit_vector* build_filters(
         oss << "union" << pos << ".rrr";
         union_name = oss.str();
 
+        std::cerr << "Unioning: " << tree[left]->name() << " with " << tree[right]->name() << " to " << union_name << std::endl;
+
         // save the BT node
         tree[pos] = new BloomTree(union_name, hashes, nh);
         tree[pos]->set_child(0, tree[left]);
