@@ -80,13 +80,29 @@ std::size_t complete_tree_child(std::size_t i, unsigned child) {
     return 0;
 }
 
+// compute the number of nodes needed for a full binary tree of n nodes
 unsigned number_nodes_in_complete_tree(unsigned n) {
-    // compute the number of nodes needed:
     unsigned lp2 = int(log2(n));  // largest power of 2 <= n
     unsigned sz_last_complete_row = pow(2, lp2);
     return (2 * sz_last_complete_row - 1) + 2*(n-sz_last_complete_row);
 }
 
+// union using 64bit integers
+sdsl::bit_vector* union_bv_fast(const sdsl::bit_vector & b1, const sdsl::bit_vector& b2) {
+    assert(b1.size() == b2.size());
+
+    sdsl::bit_vector* out = new sdsl::bit_vector(b1.size(), 0);
+    uint64_t* out_data = out->data();
+
+    const uint64_t* b1_data = b1.data();
+    const uint64_t* b2_data = b2.data();
+    for (sdsl::bit_vector::size_type p = 0; p < b1.size(); ++p) {
+        (*out_data++) = (*b1_data++) | (*b2_data++);
+    }
+    return out;
+}
+
+// a very simple implementation of union
 sdsl::bit_vector* union_bv(const sdsl::bit_vector& b1, const sdsl::bit_vector& b2) {
     sdsl::bit_vector* out = new sdsl::bit_vector(b1.size(), 0);
     for (std::size_t i = 0; i < b1.size(); i++) {
@@ -96,11 +112,11 @@ sdsl::bit_vector* union_bv(const sdsl::bit_vector& b1, const sdsl::bit_vector& b
 }
 
 // removes the directory name and optionally the given suffix.
-std::string basename(const string & str, const string & suff) {
+std::string basename(const std::string & str, const std::string & suff) {
     auto p = str.rfind("/");
     std::string s = (p == std::string::npos) ? str : str.substr(p+1);
     auto end = s.size() - suff.size();
-    if (str.substr(end) == suff) {
+    if (s.substr(end) == suff) {
         return str.substr(0, str.size() - suff.size());
     }
     return s;
@@ -136,7 +152,7 @@ sdsl::bit_vector* build_filters(
         std::cerr << "Creating union: " << pos << std::endl;
         
         // union the two filters & discard the children
-        u = union_bv(*bl, *br);
+        u = union_bv_fast(*bl, *br);
         delete bl;
         delete br;
         
@@ -145,7 +161,8 @@ sdsl::bit_vector* build_filters(
         oss << "union" << pos << ".rrr";
         union_name = oss.str();
 
-        std::cerr << "Unioning: " << tree[left]->name() << " with " << tree[right]->name() << " to " << union_name << std::endl;
+        std::cerr << "Unioning: " << tree[left]->name() << " with " <<
+            tree[right]->name() << " to " << union_name << std::endl;
 
         // save the BT node
         tree[pos] = new BloomTree(union_name, hashes, nh);
@@ -166,7 +183,7 @@ sdsl::bit_vector* build_filters(
     }
     
     // compress and write it out if it doesn't already exist
-    ifstream check(union_name.c_str());
+    std::ifstream check(union_name.c_str());
     if (!check) {
         // convert and save compressed version
         std::cerr << "Compressing to " << union_name << std::endl;

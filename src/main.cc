@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
 
     } else if (command == "build") {
         std::cerr << "Building..." << std::endl;
-        vector<std::string> leaves = read_filter_list(query_file);
+        std::vector<std::string> leaves = read_filter_list(query_file);
         build_bt_from_jfbloom(leaves, out_file);
     }
     std::cerr << "Done." << std::endl;

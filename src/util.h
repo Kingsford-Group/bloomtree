@@ -8,8 +8,6 @@
 #include <vector>
 #include <cassert>
 
-using namespace std;
-
 
 //
 // Print the elements of a map nicely
@@ -17,12 +15,12 @@ using namespace std;
 template <class T, class Q>
 void
 PrintMap(
-  ostream & ostr,
-  const map<T,Q> & m,
-  const string & key_value_sep,
-  const string & pair_sep)
+  std::ostream & ostr,
+  const std::map<T,Q> & m,
+  const std::string & key_value_sep,
+  const std::string & pair_sep)
 {
-  for(typename map<T,Q>::const_iterator M = m.begin();
+  for(typename std::map<T,Q>::const_iterator M = m.begin();
       M != m.end();
       ++M)
   {
@@ -31,105 +29,37 @@ PrintMap(
 }
 
 
+std::string TrimRight(const std::string & str);
+std::string TrimLeft(const std::string & str);
+std::string Trim(const std::string & str);
 
-inline 
-string 
-TrimRight(const string & str)
-{
-    string tmp = str;
-    return tmp.erase(tmp.find_last_not_of(" ") + 1);
-}
-
-inline
-string
-TrimLeft(const string & str)
-{
-    string tmp = str;
-    return tmp.erase(0, tmp.find_first_not_of(" "));
-}
-
-inline
-string
-Trim(const string & str)
-{
-    string tmp = str;
-    return TrimLeft(TrimRight(str));
-}
 
 //==========================================================
 // Error messages
 //==========================================================
+void DIE(const std::string & msg);
+void WARN(const std::string & msg);
+void DIE_IF(bool bad, const std::string & msg);
 
-//
-// Die with the message
-//
-inline
-void
-DIE(const string & msg)
-{
-  cerr << "fatal: " << msg << endl;
-  exit(3);
-}
-
-inline
-void
-WARN(const string & msg)
-{
-    cerr << "warning: " << msg << endl;
-}
-
-//
-// Die, with a message, if bad is true
-//
-inline
-void
-DIE_IF(bool bad, const string & msg)
-{
-  if(bad) DIE(msg);
-}
-
-//
-// Die, with a message, if bad is true
-//
-inline
-void
-ERROR_IF(bool bad, int line_number, const string & msg)
-{
-  if(bad) 
-  {
-    cerr << line_number << ": "; 
-    DIE(msg);
-  }
-}
 
 //
 // Write a number then backspace
 //
-void
-WriteStatusNumber(
-  ostream & out,
-  unsigned n);
+void WriteStatusNumber(std::ostream & out, unsigned n);
 
 //
 // Return the same string UPPERCASED
 //
-string
-Upcase(const string &);
+std::string Upcase(const std::string &);
 
 //
 // Split string str into fields separated by sep
 // field numbers start at 0
 //
-int
-SplitString(
-  const string &, 
-  char,
-  vector<string> &);
+int SplitString(const std::string &, char, std::vector<std::string> &);
 
-string
-SetAsString(const set<string> &,  const string & = " ");
+std::string SetAsString(const std::set<std::string> &,  const std::string & = " ");
 
-string
-VectorAsString( const vector<string> &, const string & = " ");
+std::string VectorAsString(const std::vector<std::string> &, const std::string & = " ");
 
 #endif

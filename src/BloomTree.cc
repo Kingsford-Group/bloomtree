@@ -225,7 +225,7 @@ void write_bloom_tree_helper(std::ostream & out, BloomTree* root, int level=1) {
 void write_bloom_tree(
     const std::string & outfile, 
     BloomTree* root, 
-    const string & matrix_file
+    const std::string & matrix_file
 ) {
     std::cerr << "Writing to " << outfile << std::endl;
     std::ofstream out(outfile.c_str());

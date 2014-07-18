@@ -27,7 +27,7 @@ Kmer kmer_to_bits(const std::string & str) {
 
 std::set<jellyfish::mer_dna> kmers_in_string(const std::string & str) {
     auto k = jellyfish::mer_dna::k();
-    set<jellyfish::mer_dna> s;
+    std::set<jellyfish::mer_dna> s;
     for (size_t i = 0; i <= str.size() - k; i++) {
         s.insert(jellyfish::mer_dna(str.substr(i, k)));
     }

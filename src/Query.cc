@@ -63,7 +63,7 @@ void query_from_file(
     std::vector<BloomTree*> out;
     std::string line;
 
-    ifstream in(fn);
+    std::ifstream in(fn);
     while (getline(in, line)) {
         line = Trim(line);
         if (line.size() < jellyfish::mer_dna::k()) continue;
