@@ -121,7 +121,7 @@ std::string basename(const std::string & str, const std::string & suff) {
     std::string s = (p == std::string::npos) ? str : str.substr(p+1);
     auto end = s.size() - suff.size();
     if (s.substr(end) == suff) {
-        return str.substr(0, str.size() - suff.size());
+        return s.substr(0, s.size() - suff.size());
     }
     return s;
 }
