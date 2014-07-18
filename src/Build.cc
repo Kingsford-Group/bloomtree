@@ -100,7 +100,7 @@ sdsl::bit_vector* union_bv_fast(const sdsl::bit_vector & b1, const sdsl::bit_vec
     const uint64_t* b1_data = b1.data();
     const uint64_t* b2_data = b2.data();
     sdsl::bit_vector::size_type len = b1.size()>>6;
-    for (auto p = 0; p < len; ++p) {
+    for (sdsl::bit_vector::size_type p = 0; p < len; ++p) {
         (*out_data++) = (*b1_data++) | (*b2_data++);
     }
     return out;
