@@ -2,18 +2,21 @@
 #include "Kmers.h"
 #include "util.h"
 
-float QUERY_THRESHOLD = 0.8;
+#include <cassert>
+
+float QUERY_THRESHOLD = 0.9;
 
 // return true if the filter at this node contains > QUERY_THRESHOLD kmers
 bool query_passes(BloomTree* root, const std::set<jellyfish::mer_dna> & q) {
+    assert(q.size() > 0);
     auto bf = root->bf();
-    int c = 0;
+    unsigned c = 0;
     for (const auto & m : q) {
         //DEBUG: std::cout << "checking: " << m.to_str(); 
         if (bf->contains(m)) c++;
         //DEBUG: std::cout << c << std::endl;
     }
-    return (c > QUERY_THRESHOLD * q.size());
+    return (c >= QUERY_THRESHOLD * q.size());
 }
 
 // recursively walk down the tree, proceeding to children only
@@ -84,7 +87,7 @@ void query_from_file(
  * Batch querying
  ******/
 
-void print_query_set(const QuerySet & qs, std::ostream & out) {
+void print_query_results(const QuerySet & qs, std::ostream & out) {
     for (auto& q : qs) {
         out << "*" << q->query << " " << q->matching.size() << std::endl;
         for (const auto& n : q->matching) {
@@ -110,16 +113,21 @@ void query_batch(BloomTree* root, QuerySet & qs) {
         } 
     }
 
-    // if present, recurse into left child
-    if (root->child(0)) {
-        query_batch(root->child(0), pass);
-    }
+    std::cerr << "At " << root->name() << ", " << pass.size() << " queries passed." << std::endl;
 
-    // if present, recurse into right child
-    if (root->child(1)) {
-        query_batch(root->child(1), pass);
+    if (pass.size() > 0) {
+        // if present, recurse into left child
+        if (root->child(0)) {
+            query_batch(root->child(0), pass);
+        }
+
+        // if present, recurse into right child
+        if (root->child(1)) {
+            query_batch(root->child(1), pass);
+        }
     }
 } 
+
 
 void batch_query_from_file(
     BloomTree* root, 
@@ -142,7 +150,7 @@ void batch_query_from_file(
 
     // batch process the queries
     query_batch(root, qs);
-    print_query_set(qs, o);
+    print_query_results(qs, o);
 
     // free the query info objects
     for (auto & p : qs) {

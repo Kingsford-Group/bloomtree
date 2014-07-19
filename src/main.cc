@@ -22,10 +22,10 @@ std::string jfbloom_file;
 
 unsigned parallel_level = 3; // no parallelism by default
 
-const char * OPTIONS = "t:p:";
+const char * OPTIONS = "t:p:f:";
 
 static struct option LONG_OPTIONS[] = {
-    {"max-filters", required_argument, &BF_INMEM_LIMIT, 0},
+    {"max-filters", required_argument, 0, 'f'},
     {"threads", required_argument, 0, 'p'},
     {"query-threshold", required_argument, 0, 't'},
     {0,0,0,0}
@@ -50,6 +50,9 @@ int process_options(int argc, char* argv[]) {
                 break;
             case 'p':
                 parallel_level = unsigned(atoi(optarg));
+                break;
+            case 'f':
+                BF_INMEM_LIMIT = unsigned(atoi(optarg));
                 break;
             default:
                 std::cerr << "Unknown option." << std::endl;
