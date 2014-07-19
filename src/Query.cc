@@ -103,17 +103,23 @@ void query_batch(BloomTree* root, QuerySet & qs) {
 
     // construct the set of queries that pass this node
     QuerySet pass;
+    unsigned n = 0;
     for (auto & q : qs) {
         if (query_passes(root, q->query_kmers)) {
             if (has_children) {
                 pass.emplace_back(q);
             } else {
                 q->matching.emplace_back(root);
+                n++;
             }
         } 
     }
 
-    std::cerr << "At " << root->name() << ", " << pass.size() << " queries passed." << std::endl;
+    if (has_children) {
+        std::cerr << "At " << root->name() << ", " << pass.size() << " queries passed." << std::endl;
+    } else {
+        std::cerr << "At leaf " << root->name() << ", " << n << " queries matched." << std::endl;
+    }
 
     if (pass.size() > 0) {
         // if present, recurse into left child
@@ -138,6 +144,7 @@ void batch_query_from_file(
     std::string line;
     QuerySet qs;
     std::ifstream in(fn);
+    DIE_IF(!in.good(), "Couldn't open query file.");
     std::size_t n = 0;
     while (getline(in, line)) {
         line = Trim(line);
