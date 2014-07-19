@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
         BloomTree* root = read_bloom_tree(bloom_tree_file);
 
         std::cerr << "Querying..." << std::endl;
-        query_from_file(root, query_file, std::cout);
+        batch_query_from_file(root, query_file, std::cout);
 
     } else if (command == "convert") {
         std::cerr << "Converting..." << std::endl;

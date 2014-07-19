@@ -79,3 +79,74 @@ void query_from_file(
         out.clear();
     }
 }
+
+/******
+ * Batch querying
+ ******/
+
+void print_query_set(const QuerySet & qs, std::ostream & out) {
+    for (auto& q : qs) {
+        out << "*" << q->query << " " << q->matching.size() << std::endl;
+        for (const auto& n : q->matching) {
+            out << n->name() << std::endl;
+        }
+    }
+}
+
+
+void query_batch(BloomTree* root, QuerySet & qs) {
+    // how many children do we have?
+    bool has_children = root->child(0) || root->child(1);
+
+    // construct the set of queries that pass this node
+    QuerySet pass;
+    for (auto & q : qs) {
+        if (query_passes(root, q->query_kmers)) {
+            if (has_children) {
+                pass.emplace_back(q);
+            } else {
+                q->matching.emplace_back(root);
+            }
+        } 
+    }
+
+    // if present, recurse into left child
+    if (root->child(0)) {
+        query_batch(root->child(0), pass);
+    }
+
+    // if present, recurse into right child
+    if (root->child(1)) {
+        query_batch(root->child(1), pass);
+    }
+} 
+
+void batch_query_from_file(
+    BloomTree* root, 
+    const std::string & fn,
+    std::ostream & o
+) { 
+    // read in the query lines from the file.
+    std::string line;
+    QuerySet qs;
+    std::ifstream in(fn);
+    std::size_t n = 0;
+    while (getline(in, line)) {
+        line = Trim(line);
+        if (line.size() < jellyfish::mer_dna::k()) continue;
+        qs.emplace_back(new QueryInfo(line));
+        n++;
+    }
+    in.close();
+    std::cerr << "Read " << n << " queries." << std::endl;
+
+    // batch process the queries
+    query_batch(root, qs);
+    print_query_set(qs, o);
+
+    // free the query info objects
+    for (auto & p : qs) {
+        delete p;
+    }
+}
+
