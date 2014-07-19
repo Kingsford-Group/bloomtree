@@ -236,7 +236,10 @@ sdsl::bit_vector* build_filters_parallel(
     // the roots of the subtrees that we are going to run in parallel
     std::size_t level_length = std::size_t(pow(2, level));
     std::size_t level_start = level_length - 1;
-    
+
+    std::cerr << "Computing " << level_length << " roots at level " << level <<
+        " in parallel." << std::endl; 
+
     // for each of the roots, start a build_filters() process.
     std::vector<std::future<sdsl::bit_vector*> > F;
     for (std::size_t p = level_start; p < level_start + level_length; ++p) {
@@ -250,18 +253,21 @@ sdsl::bit_vector* build_filters_parallel(
         );
     }
 
+    std::cerr << "Waiting for subtrees to finish." << std::endl;
     // join on all the threads
     for (auto & f : F) {
         f.wait();
     }
 
     // finish off the top of the tree
+    std::cerr << "Finishing top of tree in single thread mode." << std::endl;
     return build_filters(leaves, tree, raw, hashes, nh, 0);
 }
 
 void build_bt_from_jfbloom(
     const std::vector<std::string> & leaves, 
-    const std::string & outf
+    const std::string & outf,
+    int parallel_level
 ) {
     // create the hashes
     int nh = 0;
@@ -273,7 +279,7 @@ void build_bt_from_jfbloom(
 
     // v holds the nodes of the semi-complete tree
     std::vector<BloomTree*> v(nb_nodes, nullptr);
-    sdsl::bit_vector *u = build_filters_parallel(leaves, v, *hashes, nh, 2);
+    sdsl::bit_vector *u = build_filters_parallel(leaves, v, *hashes, nh, parallel_level);
     std::cerr << "Built the whole tree." << std::endl;
     write_bloom_tree(outf, v[0], leaves[0]);
 

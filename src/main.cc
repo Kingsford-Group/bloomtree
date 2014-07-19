@@ -20,10 +20,13 @@ std::string query_file;
 std::string out_file;
 std::string jfbloom_file;
 
-const char * OPTIONS = "t:";
+int parallel_level = 3; // no parallelism by default
+
+const char * OPTIONS = "t:p:";
 
 static struct option LONG_OPTIONS[] = {
     {"max-filters", required_argument, &BF_INMEM_LIMIT, 0},
+    {"threads", required_argument, 0, 'p'},
     {"query-threshold", required_argument, 0, 't'},
     {0,0,0,0}
 };
@@ -44,6 +47,9 @@ int process_options(int argc, char* argv[]) {
         switch(a) {
             case 't':
                 QUERY_THRESHOLD = atof(optarg);
+                break;
+            case 'p':
+                parallel_level = atoi(optarg);
                 break;
             default:
                 std::cerr << "Unknown option." << std::endl;
@@ -93,7 +99,7 @@ int main(int argc, char* argv[]) {
     } else if (command == "build") {
         std::cerr << "Building..." << std::endl;
         std::vector<std::string> leaves = read_filter_list(query_file);
-        build_bt_from_jfbloom(leaves, out_file);
+        build_bt_from_jfbloom(leaves, out_file, parallel_level);
     }
     std::cerr << "Done." << std::endl;
 }
