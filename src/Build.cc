@@ -5,6 +5,7 @@
 #include <sstream>
 #include <cstring>
 #include <future>
+#include <algorithm>
 #include "gzstream.h"
 
 #include <sys/mman.h>
@@ -18,6 +19,7 @@ inline char bit(char * buf, unsigned long bit) {
     char bit_mask = 1 << (bit % 8); 
     return byte & bit_mask;
 }
+
 
 sdsl::bit_vector* read_bit_vector_from_jf(const std::string & jfbloom_file) {
     // Load the JF Bloom Filter
@@ -51,6 +53,7 @@ sdsl::bit_vector* read_bit_vector_from_jf(const std::string & jfbloom_file) {
     return b;
 }
 
+
 void convert_jfbloom_to_rrr(const std::string & jfbloom_file, const std::string & out_file) {
     sdsl::bit_vector* b = read_bit_vector_from_jf(jfbloom_file);
     
@@ -61,6 +64,7 @@ void convert_jfbloom_to_rrr(const std::string & jfbloom_file, const std::string 
 
     delete b;
 }
+
 
 // read a list of bloom filters, 1 per line from the given file
 std::vector<std::string> read_filter_list(const std::string & inf) {
@@ -74,6 +78,7 @@ std::vector<std::string> read_filter_list(const std::string & inf) {
     return v;
 }
 
+
 // compute the index of the children of position i
 std::size_t complete_tree_child(std::size_t i, unsigned child) {
     switch (child) {
@@ -84,12 +89,14 @@ std::size_t complete_tree_child(std::size_t i, unsigned child) {
     return 0;
 }
 
+
 // compute the number of nodes needed for a full binary tree of n nodes
 unsigned number_nodes_in_complete_tree(unsigned n) {
     unsigned lp2 = int(log2(n));  // largest power of 2 <= n
     unsigned sz_last_complete_row = pow(2, lp2);
     return (2 * sz_last_complete_row - 1) + 2*(n-sz_last_complete_row);
 }
+
 
 // union using 64bit integers
 sdsl::bit_vector* union_bv_fast(const sdsl::bit_vector & b1, const sdsl::bit_vector& b2) {
@@ -107,6 +114,7 @@ sdsl::bit_vector* union_bv_fast(const sdsl::bit_vector & b1, const sdsl::bit_vec
     return out;
 }
 
+
 // a very simple implementation of union
 sdsl::bit_vector* union_bv(const sdsl::bit_vector& b1, const sdsl::bit_vector& b2) {
     sdsl::bit_vector* out = new sdsl::bit_vector(b1.size(), 0);
@@ -115,6 +123,7 @@ sdsl::bit_vector* union_bv(const sdsl::bit_vector& b1, const sdsl::bit_vector& b
     }
     return out;
 }
+
 
 // removes the directory name and optionally the given suffix.
 std::string basename(const std::string & str, const std::string & suff) {
@@ -126,6 +135,7 @@ std::string basename(const std::string & str, const std::string & suff) {
     }
     return s;
 }
+
 
 // do a post-order traversal over the array-based "tree"
 sdsl::bit_vector* build_filters(
@@ -216,12 +226,13 @@ sdsl::bit_vector* build_filters(
     return u;
 }
 
+
 sdsl::bit_vector* build_filters_parallel(
     const std::vector<std::string> & leaves, 
     std::vector<BloomTree*> & tree,
     const HashPair & hashes, 
     int nh, 
-    int level
+    unsigned level
 ) {
     std::vector<sdsl::bit_vector*> raw(tree.size(), nullptr);
 
@@ -233,10 +244,14 @@ sdsl::bit_vector* build_filters_parallel(
     level i starts at 2^i-1, and continues for 2^i
     */
 
+    unsigned biggest_complete_level = unsigned(log2(leaves.size()));
+    level = std::min(level, biggest_complete_level);
+
     // the roots of the subtrees that we are going to run in parallel
     std::size_t level_length = std::size_t(pow(2, level));
     std::size_t level_start = level_length - 1;
 
+    std::cerr << "Parallel level = " << level << std::endl;
     std::cerr << "Computing " << level_length << " roots at level " << level <<
         " in parallel." << std::endl; 
 
@@ -264,10 +279,11 @@ sdsl::bit_vector* build_filters_parallel(
     return build_filters(leaves, tree, raw, hashes, nh, 0);
 }
 
+
 void build_bt_from_jfbloom(
     const std::vector<std::string> & leaves, 
     const std::string & outf,
-    int parallel_level
+    unsigned parallel_level
 ) {
     // create the hashes
     int nh = 0;
@@ -284,7 +300,8 @@ void build_bt_from_jfbloom(
     write_bloom_tree(outf, v[0], leaves[0]);
 
     // save uncompressed root for later merging
-    sdsl::store_to_file(u, outf + ".root");
+    std::cerr << "Storing the root bitvector" << std::endl;
+    sdsl::store_to_file(*u, outf + ".root");
     
     // free the memory for the bloom nodes
     delete u;

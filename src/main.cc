@@ -20,7 +20,7 @@ std::string query_file;
 std::string out_file;
 std::string jfbloom_file;
 
-int parallel_level = 3; // no parallelism by default
+unsigned parallel_level = 3; // no parallelism by default
 
 const char * OPTIONS = "t:p:";
 
@@ -49,7 +49,7 @@ int process_options(int argc, char* argv[]) {
                 QUERY_THRESHOLD = atof(optarg);
                 break;
             case 'p':
-                parallel_level = atoi(optarg);
+                parallel_level = unsigned(atoi(optarg));
                 break;
             default:
                 std::cerr << "Unknown option." << std::endl;
