@@ -4,6 +4,7 @@
 #include <cmath>
 #include <sstream>
 #include <cstring>
+#include <future>
 #include "gzstream.h"
 
 #include <sys/mman.h>
@@ -130,6 +131,7 @@ std::string basename(const std::string & str, const std::string & suff) {
 sdsl::bit_vector* build_filters(
     const std::vector<std::string> & leaves,
     std::vector<BloomTree*> & tree,
+    std::vector<sdsl::bit_vector*> & raw,
     const HashPair & hashes, 
     int nh,
     std::size_t pos
@@ -138,14 +140,22 @@ sdsl::bit_vector* build_filters(
     sdsl::bit_vector* bl = nullptr;
     auto left = complete_tree_child(pos, 0);
     if (left < tree.size()) {
-        bl = build_filters(leaves, tree, hashes, nh, left);
+        if (raw[left] == nullptr) {
+            bl = build_filters(leaves, tree, raw, hashes, nh, left);
+        } else {
+            bl = raw[left];
+        }
     }
 
     // build the right bitvector (and saved rrr vector)
     sdsl::bit_vector* br = nullptr;
     auto right = complete_tree_child(pos, 1);
     if (right < tree.size()) {
-        br = build_filters(leaves, tree, hashes, nh, right);
+        if (raw[right] == nullptr) {
+            br = build_filters(leaves, tree, raw, hashes, nh, right);
+        } else {
+            br = raw[right];
+        }
     }
 
     sdsl::bit_vector* u = nullptr;
@@ -157,6 +167,9 @@ sdsl::bit_vector* build_filters(
         
         // union the two filters & discard the children
         u = union_bv_fast(*bl, *br);
+        raw[pos] = u;
+        raw[left] = nullptr;
+        raw[right] = nullptr;
         delete bl;
         delete br;
         
@@ -178,6 +191,7 @@ sdsl::bit_vector* build_filters(
         // (2) create a bv, (3) store a compressed rrr vector
         union_name = leaves[tree.size() - pos - 1];
         u = read_bit_vector_from_jf(union_name);
+        raw[pos] = u;
 
         union_name = basename(union_name, std::string(".gz")) + ".rrr";
         tree[pos] = new BloomTree(union_name, hashes, nh);
@@ -202,6 +216,49 @@ sdsl::bit_vector* build_filters(
     return u;
 }
 
+sdsl::bit_vector* build_filters_parallel(
+    const std::vector<std::string> & leaves, 
+    std::vector<BloomTree*> & tree,
+    const HashPair & hashes, 
+    int nh, 
+    int level
+) {
+    std::vector<sdsl::bit_vector*> raw(tree.size(), nullptr);
+
+    /*
+    level 1 = [1,2]
+    level 2 = [3,4,5,6]
+    level 3 = [7,8,9,10,11,12,13, 14]
+    level 4 = [15,16,17,18, 19,20,21,22, 23,24,25,26, 27,28,29,30]
+    level i starts at 2^i-1, and continues for 2^i
+    */
+
+    // the roots of the subtrees that we are going to run in parallel
+    std::size_t level_length = std::size_t(pow(2, level));
+    std::size_t level_start = level_length - 1;
+    
+    // for each of the roots, start a build_filters() process.
+    std::vector<std::future<sdsl::bit_vector*> > F;
+    for (std::size_t p = level_start; p < level_start + level_length; ++p) {
+        F.emplace_back(
+            std::async(
+                std::launch::async,
+                [=, &leaves, &tree, &raw] () {
+                    return build_filters(leaves, tree, raw, hashes, nh, p);
+                }
+            )
+        );
+    }
+
+    // join on all the threads
+    for (auto & f : F) {
+        f.wait();
+    }
+
+    // finish off the top of the tree
+    return build_filters(leaves, tree, raw, hashes, nh, 0);
+}
+
 void build_bt_from_jfbloom(
     const std::vector<std::string> & leaves, 
     const std::string & outf
@@ -216,7 +273,7 @@ void build_bt_from_jfbloom(
 
     // v holds the nodes of the semi-complete tree
     std::vector<BloomTree*> v(nb_nodes, nullptr);
-    sdsl::bit_vector *u = build_filters(leaves, v, *hashes, nh, 0);
+    sdsl::bit_vector *u = build_filters_parallel(leaves, v, *hashes, nh, 2);
     std::cerr << "Built the whole tree." << std::endl;
     write_bloom_tree(outf, v[0], leaves[0]);
 
