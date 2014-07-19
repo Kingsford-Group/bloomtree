@@ -92,6 +92,8 @@ int main(int argc, char* argv[]) {
             << std::endl;
         BloomTree* root = read_bloom_tree(bloom_tree_file);
 
+        std::cerr << "In memory limit = " << BF_INMEM_LIMIT << std::endl;
+
         std::cerr << "Querying..." << std::endl;
         batch_query_from_file(root, query_file, std::cout);
 

@@ -13,7 +13,9 @@ BF::BF(const std::string & f, HashPair hp, int nh) :
 }
 
 BF::~BF() {
-    delete bits;
+    if (bits != nullptr) {
+        delete bits;
+    }
 }
 
 // returns true iff the bloom filter contains the given kmer
