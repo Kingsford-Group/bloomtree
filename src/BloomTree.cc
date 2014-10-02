@@ -52,7 +52,7 @@ void BloomTree::set_child(int which, BloomTree* c) {
 }
 
 int BloomTree::num_children() const {
-    return ((children[0]==0)?0:1) + ((children[1]==0)?0:1);
+    return ((children[0]==nullptr)?0:1) + ((children[1]==nullptr)?0:1);
 }
 
 const BloomTree* BloomTree::get_parent() const {

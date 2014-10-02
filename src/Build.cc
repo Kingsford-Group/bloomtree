@@ -313,6 +313,7 @@ BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
     // until we fall off the tree (should insert before then)
     int depth = 0;
     while (T != nullptr) {
+        std::cerr << "At node: " << T->name() << std::endl;
         if (T->num_children() == 0) {
             // this is the tricky case: T is currently a leaf, which means it
             // represents an SRA file, and so it has to stay a leaf. So what we
@@ -324,6 +325,8 @@ BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
                 << " at depth " << depth << std::endl;
 
             BloomTree* NewNode = T->union_bloom_filters(oss.str(), N);
+            std::cerr << "   1:" << NewNode->child(0)->name() << std::endl;
+            std::cerr << "   2:" << NewNode->child(1)->name() << std::endl;
             if (T->get_parent() == nullptr) {
                 return NewNode;
             } else {
