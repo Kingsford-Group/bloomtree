@@ -312,6 +312,9 @@ BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
 
     // until we fall off the tree (should insert before then)
     int depth = 0;
+    int best_child = -1;
+    BloomTree* parent = nullptr;
+
     while (T != nullptr) {
         std::cerr << "At node: " << T->name() << std::endl;
         if (T->num_children() == 0) {
@@ -323,15 +326,17 @@ BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
             oss << "union_" << N->name();
             std::cerr << "Splitting leaf into " << oss.str() 
                 << " at depth " << depth << std::endl;
-            bool replace_root = (T->get_parent() == nullptr);
 
             BloomTree* NewNode = T->union_bloom_filters(oss.str(), N);
             std::cerr << "   1:" << NewNode->child(0)->name() << std::endl;
             std::cerr << "   2:" << NewNode->child(1)->name() << std::endl;
-            if (replace_root) {
+
+            if (parent == nullptr) {
                 return NewNode;
             } else {
-                NewNode->set_parent(T->get_parent());
+                assert(best_child != -1);
+                assert(parent != nullptr);
+                parent->set_child(best_child, NewNode);
                 return root;
             }
         } else if (T->num_children() == 1) {
@@ -350,8 +355,8 @@ BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
             DIE("Something is wrong!");
         } else {
             // find the most similar child and move to it
-            int best_sim = 0;
-            int best_child = -1;
+            uint64_t best_sim = 0;
+            best_child = -1;
             for (int i = 0; i < 2; i++) {
                 uint64_t sim = T->child(i)->similarity(N);
                 std::cerr << "Child " << i << " sim =" << sim << std::endl;
@@ -367,6 +372,7 @@ BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
             // move the current ptr to the most similar child
             std::cerr << "Moving to " << ((best_child==0)?"left":"right") 
                 << " child: " << best_child << " " << best_sim << std::endl;
+            parent = T;
             T = T->child(best_child);
         }
         depth++;
