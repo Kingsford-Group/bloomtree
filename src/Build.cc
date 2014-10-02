@@ -353,8 +353,9 @@ BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
             int best_sim = 0;
             int best_child = -1;
             for (int i = 0; i < 2; i++) {
-                int sim = T->child(i)->similarity(N);
-                if (sim > best_sim) {
+                uint64_t sim = T->child(i)->similarity(N);
+                std::cerr << "Child " << i << " sim =" << sim << std::endl;
+                if (sim >= best_sim) {
                     best_sim = sim;
                     best_child = i;
                 }
@@ -365,7 +366,7 @@ BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
 
             // move the current ptr to the most similar child
             std::cerr << "Moving to " << ((best_child==0)?"left":"right") 
-                << " child." << std::endl;
+                << " child: " << best_child << " " << best_sim << std::endl;
             T = T->child(best_child);
         }
         depth++;
