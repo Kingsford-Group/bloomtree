@@ -118,6 +118,7 @@ void UncompressedBF::load() {
 }
 
 void UncompressedBF::save() {
+    std::cerr << "Saving BF to " << filename << std::endl;
     sdsl::store_to_file(*bv, filename);
 }
 

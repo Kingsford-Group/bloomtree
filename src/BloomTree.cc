@@ -94,6 +94,7 @@ void BloomTree::unload() const {
         delete bloom_filter; 
         bloom_filter = nullptr; 
     }
+    dirty = false;
 }
 
 // Loads the bloom filtering into memory
