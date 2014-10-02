@@ -13,16 +13,23 @@ using HashPair = jellyfish::hash_pair<jellyfish::mer_dna>;
 class BF {
 public:
     BF(const std::string & filename, HashPair hp, int nh);
-    ~BF();
+    virtual ~BF();
 
-    void load();
+    virtual void load();
+    virtual void save();
 
-    bool contains(const jellyfish::mer_dna & m) const;
+    virtual int operator[](uint64_t pos) const;
+    virtual uint64_t size() const;
+
+    virtual bool contains(const jellyfish::mer_dna & m) const;
     bool contains(const std::string & str) const;
 
-    BF* union_with(const std::string & new_name, const BF* f2) const;
+    virtual uint64_t similarity(const BF* other) const;
 
-private:
+    virtual BF* union_with(const std::string & new_name, const BF* f2) const;
+    virtual void union_into(const BF* f2);
+
+protected:
     std::string filename;
     sdsl::rrr_vector<255>* bits;
 
@@ -30,5 +37,25 @@ private:
     unsigned long num_hash;
 };
 
+class UncompressedBF : public BF {
+public:
+    UncompressedBF(const std::string & filename, HashPair hp, int nh);
+    virtual ~UncompressedBF();
+
+    virtual void load();
+    virtual void save();
+
+    virtual int operator[](uint64_t pos) const;
+    virtual uint64_t size() const;
+    virtual uint64_t similarity(const BF* other) const;
+    virtual BF* union_with(const std::string & new_name, const BF* f2) const;
+    virtual void union_into(const BF* f2);
+
+protected:
+    sdsl::bit_vector* bv;
+};
+
+sdsl::bit_vector* union_bv_fast(const sdsl::bit_vector & b1, const sdsl::bit_vector& b2);
+BF* load_bf_from_file(const std::string & fn, HashPair hp, int nh);
 
 #endif

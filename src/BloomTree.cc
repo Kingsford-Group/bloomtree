@@ -22,7 +22,8 @@ BloomTree::BloomTree(
     num_hash(nh),
     bloom_filter(0),
     parent(0),
-    usage_count(0)
+    usage_count(0),
+    dirty(false)
 {
     children[0] = nullptr;
     children[1] = nullptr;
@@ -50,6 +51,18 @@ void BloomTree::set_child(int which, BloomTree* c) {
     children[which] = c;
 }
 
+int BloomTree::num_children() const {
+    return ((children[0]==0)?0:1) + ((children[1]==0)?0:1);
+}
+
+const BloomTree* BloomTree::get_parent() const {
+    return this->parent;
+}
+
+void BloomTree::set_parent(const BloomTree* p) {
+    parent = const_cast<BloomTree*>(p);
+}
+
 // return the bloom filter, loading first if necessary
 BF* BloomTree::bf() const {
     load();
@@ -74,8 +87,13 @@ void BloomTree::increment_usage() {
 // Frees the memory associated with the bloom filter
 void BloomTree::unload() const { 
     // free the memory
-    delete bloom_filter; 
-    bloom_filter = nullptr; 
+    if (bloom_filter != nullptr) {
+        if (dirty) {
+            bloom_filter->save();
+        }
+        delete bloom_filter; 
+        bloom_filter = nullptr; 
+    }
 }
 
 // Loads the bloom filtering into memory
@@ -92,23 +110,48 @@ bool BloomTree::load() const {
         }
             
         // read the BF file and set bloom_filter
-        bloom_filter = new BF(filename, hashes, num_hash);
+        bloom_filter = load_bf_from_file(filename, hashes, num_hash);
         bloom_filter->load();
         heap_ref = bf_cache.insert(this, usage());
+        dirty = false;
     }
     return true;
 }
 
-/*
+uint64_t BloomTree::similarity(BloomTree* other) const {
+    return this->bf()->similarity(other->bf());
+}
+
+
 // Create a new node that is the union of the bloom filters
 // in two other nodes;
-BloomTree* BloomTree::union_bloom_filters(const std::string & new_name, BloomTree* f2) const {
+BloomTree* BloomTree::union_bloom_filters(const std::string & new_name, BloomTree* f2) {
     // move the union op into BloomTree?
     BloomTree* bt = new BloomTree(new_name, hashes, num_hash);
     bt->bloom_filter = bf()->union_with(new_name, f2->bf()); 
     bt->set_child(0, this);
     bt->set_child(1, f2);
     return bt; 
+}
+
+void BloomTree::union_into(const BloomTree* other) {
+    dirty = true;
+    bf()->union_into(other->bf());
+}
+
+/*
+BloomTree* create_union_node(BloomTree* T, BloomTree* N) {
+    assert(T != nullptr && N != nullptr);
+    assert(T->hashes == N->hashes);
+    assert(T->num_hashes == N->num_hashes);
+
+    std::string new_name = "union";
+
+    BloomTree* unionNode = new BloomTree(new_name, T->hashes, T->num_hash);
+    unionNode->bloom_filter = T->bloom_filter->union_with(new_name, N->bloom_filter);
+    unionNode->set_child(0, T);
+    unionNode->set_child(1, N);
+    return unionNode;
 }
 */
 

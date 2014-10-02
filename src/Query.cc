@@ -67,6 +67,7 @@ void query_from_file(
     std::string line;
 
     std::ifstream in(fn);
+    DIE_IF(!in.good(), "Couldn't open query file.");
     while (getline(in, line)) {
         line = Trim(line);
         if (line.size() < jellyfish::mer_dna::k()) continue;

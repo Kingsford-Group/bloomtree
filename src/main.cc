@@ -9,8 +9,6 @@
 #include <getopt.h>
 
 /* TODO:
- * 3. test the heap out for larger scale test
- * 4. parallelize building by startign at grandchidlren of root
  */
 
 // various commandline filenames
@@ -104,7 +102,8 @@ int main(int argc, char* argv[]) {
     } else if (command == "build") {
         std::cerr << "Building..." << std::endl;
         std::vector<std::string> leaves = read_filter_list(query_file);
-        build_bt_from_jfbloom(leaves, out_file, parallel_level);
+        //build_bt_from_jfbloom(leaves, out_file, parallel_level);
+        dynamic_build(leaves, out_file);
     }
     std::cerr << "Done." << std::endl;
 }

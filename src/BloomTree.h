@@ -17,10 +17,15 @@ public:
 
     BloomTree* child(int which) const;
     void set_child(int which, BloomTree* c);
+    int num_children() const;
+    void set_parent(const BloomTree* p);
+    const BloomTree* get_parent() const;
+    uint64_t similarity(BloomTree* other) const;
 
     BF* bf() const;
 
-    //BloomTree* union_bloom_filters(const std::string & new_name, BloomTree* f2) const;
+    BloomTree* union_bloom_filters(const std::string & new_name, BloomTree* f2);
+    void union_into(const BloomTree* other);
 
     int usage() const;
     void increment_usage();
@@ -40,6 +45,7 @@ private:
     BloomTree* children[2];
     BloomTree* parent;
     int usage_count;
+    mutable bool dirty;
 };
 
 HashPair* get_hash_function(const std::string & matrix_file, int & nh);

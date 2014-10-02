@@ -98,23 +98,7 @@ unsigned number_nodes_in_complete_tree(unsigned n) {
 }
 
 
-// union using 64bit integers
-sdsl::bit_vector* union_bv_fast(const sdsl::bit_vector & b1, const sdsl::bit_vector& b2) {
-    assert(b1.size() == b2.size());
-
-    sdsl::bit_vector* out = new sdsl::bit_vector(b1.size(), 0);
-    uint64_t* out_data = out->data();
-
-    const uint64_t* b1_data = b1.data();
-    const uint64_t* b2_data = b2.data();
-    sdsl::bit_vector::size_type len = b1.size()>>6;
-    for (sdsl::bit_vector::size_type p = 0; p < len; ++p) {
-        (*out_data++) = (*b1_data++) | (*b2_data++);
-    }
-    return out;
-}
-
-
+/*
 // a very simple implementation of union
 sdsl::bit_vector* union_bv(const sdsl::bit_vector& b1, const sdsl::bit_vector& b2) {
     sdsl::bit_vector* out = new sdsl::bit_vector(b1.size(), 0);
@@ -123,6 +107,7 @@ sdsl::bit_vector* union_bv(const sdsl::bit_vector& b1, const sdsl::bit_vector& b
     }
     return out;
 }
+*/
 
 
 // removes the directory name and optionally the given suffix.
@@ -308,6 +293,117 @@ void build_bt_from_jfbloom(
     for (auto & p : v) {
         delete p;
     }
+}
+
+
+// walk down T, finding the best path; insert N (which could be a subtree) at the leaf
+// we come to, and union all the parents
+BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
+
+    // save the root to return
+    BloomTree* root = T;
+
+    // handle the case of inserting into an empty tree
+    if (T == nullptr) {
+        N->set_parent(nullptr);
+        return N;
+    }
+
+    // until we fall off the tree (should insert before then)
+    while (T != nullptr) {
+        if (T->num_children() == 0) {
+            // this is the tricky case: T is currently a leaf, which means it
+            // represents an SRA file, and so it has to stay a leaf. So what we
+            // must do is replace T by a new union fiilter T -->
+            // NewNode{child0=T, child1=N}
+            std::ostringstream oss;
+            oss << "union_" << N->name();
+
+            BloomTree* NewNode = T->union_bloom_filters(oss.str(), N);
+            if (T->get_parent() == nullptr) {
+                return NewNode;
+            } else {
+                NewNode->set_parent(T->get_parent());
+                return root;
+            }
+
+        } else if (T->num_children() == 1) {
+            // union the new filter with this node
+            T->union_into(N);
+            
+            // insert into first empty child
+            for (int i =0; i < 2; i++) {
+                if (T->child(i) == 0) {
+                    T->set_child(i, N);
+                    return root;
+                }
+            }
+        } else {
+            // find the most similar child and move to it
+            int best_sim = 0;
+            int best_child = -1;
+            for (int i = 0; i < 2; i++) {
+                int sim = T->child(i)->similarity(N);
+                if (sim > best_sim) {
+                    best_sim = sim;
+                    best_child = i;
+                }
+            }
+            
+            // union the new filter with this node
+            T->union_into(N);
+
+            // move the current ptr to the most similar child
+            T = T->child(best_child);
+        }
+    }
+    assert(T != 0);
+
+    return root;
+}
+
+// delete a tree
+void delete_bloom_tree(BloomTree* T) {
+    if (T->child(0) != nullptr) {
+        delete_bloom_tree(T->child(0));
+    }
+    if (T->child(1) != nullptr) {
+        delete_bloom_tree(T->child(1));
+    }
+    delete T;
+}
+
+// build the tree by repeated insertion
+void dynamic_build(
+    const std::vector<std::string> & leaves, 
+    const std::string & outf
+) {
+    // create the hashes
+    int nh = 0;
+    HashPair* hashes = get_hash_function(leaves[0], nh); 
+
+    BloomTree* root = nullptr;
+
+    // for every leaf
+    for (const auto & leaf : leaves) {
+        // read JF filter and save it as a bv
+        sdsl::bit_vector* f = read_bit_vector_from_jf(leaf);
+        std::string filter_name = basename(leaf, std::string(".gz")) + ".bv";
+        sdsl::store_to_file(*f, filter_name);
+
+        // create the node that points to the filter we just saved
+        BloomTree* N = new BloomTree(filter_name, *hashes, nh);
+        
+        //  insert this new leaf
+        root = insert_bloom_tree(root, N);
+    }
+    
+    // write the tree file
+    std::cerr << "Built the whole tree." << std::endl;
+    write_bloom_tree(outf, root, leaves[0]);
+    
+    // delete the tree (which saves it)
+    delete_bloom_tree(root);
 }
 
 
