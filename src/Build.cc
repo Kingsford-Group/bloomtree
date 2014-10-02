@@ -300,7 +300,7 @@ void build_bt_from_jfbloom(
 // we come to, and union all the parents
 BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
 
-    std::cerr << "Inserting leaf " << T->name() << " ... " << std::endl;
+    std::cerr << "Inserting leaf " << N->name() << " ... " << std::endl;
     // save the root to return
     BloomTree* root = T;
 
