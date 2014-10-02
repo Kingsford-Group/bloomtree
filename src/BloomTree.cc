@@ -87,6 +87,7 @@ void BloomTree::increment_usage() {
 // Frees the memory associated with the bloom filter
 void BloomTree::unload() const { 
     // free the memory
+    std::cerr << "Unloading " << name() << std::endl;
     if (bloom_filter != nullptr) {
         if (dirty) {
             bloom_filter->save();
