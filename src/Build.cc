@@ -323,11 +323,12 @@ BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
             oss << "union_" << N->name();
             std::cerr << "Splitting leaf into " << oss.str() 
                 << " at depth " << depth << std::endl;
+            bool replace_root = (T->get_parent() == nullptr);
 
             BloomTree* NewNode = T->union_bloom_filters(oss.str(), N);
             std::cerr << "   1:" << NewNode->child(0)->name() << std::endl;
             std::cerr << "   2:" << NewNode->child(1)->name() << std::endl;
-            if (T->get_parent() == nullptr) {
+            if (replace_root) {
                 return NewNode;
             } else {
                 NewNode->set_parent(T->get_parent());
