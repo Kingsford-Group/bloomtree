@@ -58,6 +58,7 @@ void BF::load() {
 }
 
 void BF::save() {
+    std::cerr << "Saving BF to " << filename << std::endl;
     sdsl::store_to_file(*bits, filename);
 }
 

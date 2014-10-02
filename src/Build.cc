@@ -300,6 +300,7 @@ void build_bt_from_jfbloom(
 // we come to, and union all the parents
 BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
 
+    std::cerr << "Inserting leaf " << T->name() << " ... " << std::endl;
     // save the root to return
     BloomTree* root = T;
 
@@ -310,6 +311,7 @@ BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
     }
 
     // until we fall off the tree (should insert before then)
+    int depth = 0;
     while (T != nullptr) {
         if (T->num_children() == 0) {
             // this is the tricky case: T is currently a leaf, which means it
@@ -318,6 +320,8 @@ BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
             // NewNode{child0=T, child1=N}
             std::ostringstream oss;
             oss << "union_" << N->name();
+            std::cerr << "Splitting leaf into " << oss.str() 
+                << " at depth " << depth << std::endl;
 
             BloomTree* NewNode = T->union_bloom_filters(oss.str(), N);
             if (T->get_parent() == nullptr) {
@@ -326,18 +330,20 @@ BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
                 NewNode->set_parent(T->get_parent());
                 return root;
             }
-
         } else if (T->num_children() == 1) {
             // union the new filter with this node
             T->union_into(N);
             
             // insert into first empty child
             for (int i =0; i < 2; i++) {
-                if (T->child(i) == 0) {
+                if (T->child(i) == nullptr) {
+                    std::cerr << "Adding as " << ((i==0)?"left":"right") 
+                        << " child." << std::endl;
                     T->set_child(i, N);
                     return root;
                 }
             }
+            DIE("Something is wrong!");
         } else {
             // find the most similar child and move to it
             int best_sim = 0;
@@ -354,8 +360,11 @@ BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
             T->union_into(N);
 
             // move the current ptr to the most similar child
+            std::cerr << "Moving to " << ((best_child==0)?"left":"right") 
+                << " child." << std::endl;
             T = T->child(best_child);
         }
+        depth++;
     }
     assert(T != 0);
 
@@ -385,6 +394,7 @@ void dynamic_build(
     BloomTree* root = nullptr;
 
     // for every leaf
+    std::cerr << "Inserting leaves into tree..." << std::endl;
     for (const auto & leaf : leaves) {
         // read JF filter and save it as a bv
         sdsl::bit_vector* f = read_bit_vector_from_jf(leaf);
@@ -403,6 +413,7 @@ void dynamic_build(
     write_bloom_tree(outf, root, leaves[0]);
     
     // delete the tree (which saves it)
+    std::cerr << "Freeing tree (and saving dirty filters)" << std::endl;
     delete_bloom_tree(root);
 }
 
