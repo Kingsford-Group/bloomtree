@@ -109,10 +109,14 @@ UncompressedBF::UncompressedBF(const std::string & f, HashPair hp, int nh) :
 
 UncompressedBF::~UncompressedBF() {
     // call to base destructor happens automatically
+    if (bv != nullptr) {
+        delete bv;
+    }
 }
 
 void UncompressedBF::load() {
     // read the actual bits
+    assert(bv == nullptr);
     bv = new sdsl::bit_vector();
     sdsl::load_from_file(*bv, filename);
 }

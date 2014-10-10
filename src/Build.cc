@@ -422,8 +422,8 @@ void dynamic_build(
         sdsl::bit_vector* f = read_bit_vector_from_jf(leaf);
         std::string filter_name = basename(leaf, std::string(".gz")) + ".bv";
         std::string store_name = bloom_storage;
-	store_name.append(filter_name);
-	sdsl::store_to_file(*f, store_name);
+        store_name.append(filter_name);
+        sdsl::store_to_file(*f, store_name);
 
         // create the node that points to the filter we just saved
         BloomTree* N = new BloomTree(store_name, *hashes, nh);
