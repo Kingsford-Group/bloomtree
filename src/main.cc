@@ -18,6 +18,8 @@ std::string query_file;
 std::string out_file;
 std::string jfbloom_file;
 
+std::string bloom_storage;
+
 unsigned parallel_level = 3; // no parallelism by default
 
 const char * OPTIONS = "t:p:f:";
@@ -71,9 +73,10 @@ int process_options(int argc, char* argv[]) {
         out_file = argv[optind+2];
 
     } else if (command == "build") {
-        if (optind >= argc-2) print_usage();
+        if (optind >= argc-3) print_usage();
         query_file = argv[optind+1];
         out_file = argv[optind+2];
+	bloom_storage = argv[optind+3];
     }
     return optind;
 }
@@ -103,7 +106,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "Building..." << std::endl;
         std::vector<std::string> leaves = read_filter_list(query_file);
         //build_bt_from_jfbloom(leaves, out_file, parallel_level);
-        dynamic_build(leaves, out_file);
+        dynamic_build(leaves, out_file, bloom_storage);
     }
     std::cerr << "Done." << std::endl;
 }

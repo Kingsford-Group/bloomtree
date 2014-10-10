@@ -121,6 +121,16 @@ std::string basename(const std::string & str, const std::string & suff) {
     return s;
 }
 
+std::string nosuffix(const std::string & str, const std::string & suff) {
+    std::string s = str;
+    auto end = s.size() - suff.size();
+    if (s.substr(end) == suff) {
+        return s.substr(0, s.size() - suff.size());
+    }
+    return s;
+
+}
+
 
 // do a post-order traversal over the array-based "tree"
 sdsl::bit_vector* build_filters(
@@ -323,7 +333,7 @@ BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
             // must do is replace T by a new union fiilter T -->
             // NewNode{child0=T, child1=N}
             std::ostringstream oss;
-            oss << "union_" << N->name();
+            oss << nosuffix(N->name(), std::string(".bf.bv")) << "_union.bf.bv";
             std::cerr << "Splitting leaf into " << oss.str() 
                 << " at depth " << depth << std::endl;
 
@@ -396,7 +406,8 @@ void delete_bloom_tree(BloomTree* T) {
 // build the tree by repeated insertion
 void dynamic_build(
     const std::vector<std::string> & leaves, 
-    const std::string & outf
+    const std::string & outf,
+    const std::string & bloom_storage
 ) {
     // create the hashes
     int nh = 0;
@@ -410,10 +421,12 @@ void dynamic_build(
         // read JF filter and save it as a bv
         sdsl::bit_vector* f = read_bit_vector_from_jf(leaf);
         std::string filter_name = basename(leaf, std::string(".gz")) + ".bv";
-        sdsl::store_to_file(*f, filter_name);
+        std::string store_name = bloom_storage;
+	store_name.append(filter_name);
+	sdsl::store_to_file(*f, store_name);
 
         // create the node that points to the filter we just saved
-        BloomTree* N = new BloomTree(filter_name, *hashes, nh);
+        BloomTree* N = new BloomTree(store_name, *hashes, nh);
         
         //  insert this new leaf
         root = insert_bloom_tree(root, N);
