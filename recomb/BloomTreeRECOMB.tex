@@ -37,12 +37,12 @@ We introduce the Sequence Bloom Tree data structure for efficiently indexing tho
 The amount of DNA and RNA  short-read sequence data that has been published world-wide is huge. For example, the NIH's sequencing read archive~\cite{sra} alone contains 2,267,810,353,679,952 bases of sequence (about XXX~petabases). This collection of experiments could be a great resource understanding genetic variation, condition- and disease-specific gene function in ways the original depositors of the data did not anticipate. In aggregate too the data could provide the ability to answer questions  that a single experiment could not answer. However, its use is hampered by its size and the inability to search experiments by sequence. For example, a natural use of this data would exploit the XXX RNA-seq experiments to understand the conditions under which a novel or hypothesized alternatively spliced isoform $q$ is expressed by searching each SRA experiment for enough reads matching $q$ to indicate the $q$ was present in the experiment. cever, searching the entirety of such a database for expressed genes, novel isoforms, or homologous gene sequences  is not currently possible in reasonable computational time.  With this motivation, we define  the following search problem, which we will investigate below:
 %
 \begin{problem}\label{searchprob}
-Given a query sequence $q$, which may be of any length, find the sequencing experiments that are likely to contain this sequence. If the experiment contains transcriptomic sequences, "contains" means likely expressed. If the experiment contains genomic or metagenomic sequences, "contain" means would be present in the assembled genomes.
+Given a query sequence $q$, which may be of any length, find the sequencing experiments that are likely to contain this sequence. If the experiment contains transcriptomic sequences, ``contains'' means likely expressed. If the experiment contains genomic or metagenomic sequences, ``contains'' means would be present in the assembled genomes.
 \end{problem}
 
 % why the problem is not yet solved / the challenges
 
-Some progress has been made toward enabling sequence search on large databases.  The SRA does provide a sequence search functionality (SRA-BLAST~\cite{srablast}); however, this tool requires the selection of a small number of SRA experiments to which to restrict the search. Other similar services~\cite{othersrablast} limit the number of reads searched to XXX million (about XXX human RNA-seq  experiments, or XXX\% of the SRA). Existing full-text indexing data structures~\cite{fulltextindex} such as Borrows-Wheeler transform~\cite{BWT}, FM-index~\cite{fmindex}, compressed suffix arrays~\cite{comps}, or wavelet trees~\cite{xxx} cannot at present be efficiently built at this scale, and do not directly support the search of millions of short sequences. Word-based indices~\cite{word1,word2}, such as those used by Internet search engines, are not appropriate for edit-distance-based biological sequence search. Sequence-specific solutions caBLAST~\cite{cablast} and caBLASTP~\cite{cablastp} have explored using custom compressed indices to speed up search. While successful at protein or genome search, they do not scale to collections of millions of short reads. All of these existing approaches do not handle the additional complication that a match to a query sequence $q$ may span many short reads.
+Some progress has been made toward enabling sequence search on large databases.  The SRA does provide a sequence search functionality (SRA-BLAST~\cite{srablast}); however, this tool requires the selection of a small number of SRA experiments to which to restrict the search. Other similar services~\cite{othersrablast} limit the number of reads searched to XXX million (about XXX human RNA-seq  experiments, or XXX\% of the SRA). Existing full-text indexing data structures~\cite{fulltextindex} such as Borrows-Wheeler transform~\cite{BWT}, FM-index~\cite{fmindex}, compressed suffix arrays~\cite{comps}, or wavelet trees~\cite{wavelet} cannot at present be efficiently built at this scale, and do not directly support the search of millions of short sequences. Word-based indices~\cite{word1,word2}, such as those used by Internet search engines, are not appropriate for edit-distance-based biological sequence search. Sequence-specific solutions caBLAST~\cite{cablast} and caBLASTP~\cite{cablastp} have explored using custom compressed indices to speed up search. While successful at protein or genome search, they do not scale to collections of millions of short reads. All of these existing approaches do not handle the additional complication that a match to a query sequence $q$ may span many short reads.
 
 % summary of results and their significance
 
@@ -130,7 +130,10 @@ Lemma~\ref{lem:query} shows that so long as the $\theta$ is chosen to be greater
 A scheme for sampling based on fraction hashes
 
 -- approximation due to independence assumption
--- 
+
+-- estimated number of nodes visited?
+
+-- summary theorem about how to set h given a desired query FPR
 
 \subsection{Query}
 
