@@ -5,10 +5,15 @@
 \usepackage{amsmath}
 \usepackage{amsthm}
 \usepackage{secdot}
+\usepackage{booktabs}
+\usepackage[numbers]{natbib}
+\usepackage{hyperref}
 
 \geometry{margin=1in,letterpaper} 
 \newtheorem{thm}{Theorem}
 \newtheorem{lem}{Lemma}
+\newtheorem{problem}{Problem}
+
 
 \newcommand\EE{\mathbb{E}}
 
@@ -22,19 +27,30 @@ bsolomo1@andrew.cmu.edu, carlk@cs.cmu.edu}
 \begin{document}
 \maketitle
 \begin{abstract}
-We introduce the Sequence Bloom Tree data structure for efficiently indexing thousands of short-read sequencing experiments so that they can be searched by sequence. We apply Sequence Bloom Trees to the problem of finding conditions under which query genes are expressed. Our experiments are conducted on the entire set of 4,XXX publicly available RNA-seq experiments contained in the NIH Sequencing Read Archive for the breast, blood, and brain tissues, comprising XXX terabases of sequence. Sequence Bloom Trees of this size can be built using a single thread in XXX hours, and a query of 1000~nt can be searched in XXX seconds, over XXX times faster than fasta32.  Sequence Bloom Trees allow for fast identification of experiments with expressed novel isoforms, even if these isoforms were unknown at the time the Sequence Bloom Tree was built. 
+We introduce the Sequence Bloom Tree data structure for efficiently indexing thousands of short-read sequencing experiments so that they can be searched by sequence. We apply Sequence Bloom Trees to the problem of finding conditions under which query genes are expressed. Our experiments are conducted on the entire set of 4,XXX publicly available RNA-seq experiments contained in the NIH Sequencing Read Archive for the breast, blood, and brain tissues, comprising XXX terabases of sequence. Sequence Bloom Trees of this size can be built using a single thread in XXX hours, and a query of 1000~nt can be searched in XXX seconds, over XXX times faster than fasta32. We also provide some theoretical guidance about appropriate parameter selection in Sequence Bloom Trees to trade off between search speed and accuracy. Sequence Bloom Trees allow for fast identification of experiments with expressed novel isoforms, even if these isoforms were unknown at the time the Sequence Bloom Tree was built. They are our first building block toward the goal of a highly searchable database of short-read sequencing data.
 \end{abstract}
 
 \section{Introduction}
 
-% motiviation
+% The motivation and introduction of the problem
 
-% summary of BT
+The amount of DNA and RNA  short-read sequence data that has been published world-wide is huge. For example, the NIH's sequencing read archive~\cite{sra} alone contains 2,267,810,353,679,952 bases of sequence (about XXX~petabases). This collection of experiments could be a great resource understanding genetic variation, condition- and disease-specific gene function in ways the original depositors of the data did not anticipate. In aggregate too the data could provide the ability to answer questions  that a single experiment could not answer. However, its use is hampered by its size and the inability to search experiments by sequence. For example, a natural use of this data would exploit the XXX RNA-seq experiments to understand the conditions under which a novel or hypothesized alternatively spliced isoform $q$ is expressed by searching each SRA experiment for enough reads matching $q$ to indicate the $q$ was present in the experiment. cever, searching the entirety of such a database for expressed genes, novel isoforms, or homologous gene sequences  is not currently possible in reasonable computational time.  With this motivation, we define  the following search problem, which we will investigate below:
+%
+\begin{problem}\label{searchprob}
+Given a query sequence $q$, which may be of any length, find the sequencing experiments that are likely to contain this sequence. If the experiment contains transcriptomic sequences, "contains" means likely expressed. If the experiment contains genomic or metagenomic sequences, "contain" means would be present in the assembled genomes.
+\end{problem}
 
-% summary of related work: bloom filter papers, 
+% why the problem is not yet solved / the challenges
 
-% summary of results
+Some progress has been made toward enabling sequence search on large databases.  The SRA does provide a sequence search functionality (SRA-BLAST~\cite{srablast}); however, this tool requires the selection of a small number of SRA experiments to which to restrict the search. Other similar services~\cite{othersrablast} limit the number of reads searched to XXX million (about XXX human RNA-seq  experiments, or XXX\% of the SRA). Existing full-text indexing data structures~\cite{fulltextindex} such as Borrows-Wheeler transform~\cite{BWT}, FM-index~\cite{fmindex}, compressed suffix arrays~\cite{comps}, or wavelet trees~\cite{xxx} cannot at present be efficiently built at this scale, and do not directly support the search of millions of short sequences. Word-based indices~\cite{word1,word2}, such as those used by Internet search engines, are not appropriate for edit-distance-based biological sequence search. Sequence-specific solutions caBLAST~\cite{cablast} and caBLASTP~\cite{cablastp} have explored using custom compressed indices to speed up search. While successful at protein or genome search, they do not scale to collections of millions of short reads. All of these existing approaches do not handle the additional complication that a match to a query sequence $q$ may span many short reads.
 
+% summary of results and their significance
+
+We introduce a new indexing data structure called Sequence Bloom Trees (Figure~\ref{fig:schematic}) for application to sequence search. Sequence Bloom Trees allow for fast search of thousands of short-read sequencing experiments as required by Problem~\ref{searchprob}. They are practical to build and extremely efficient to search: building a SBT on XXX SRA experiments takes approximately XXX hours using a single thread on a single computer.  They are space efficient as well, requiring less than XXX\% of the space of the sequences they search. They are accurate, identifying XXX\% of truly matching sequencing experiments and with a false positive rate of $< XXX$\%.  They are easily distributed across computers in the cloud or a grid, and they are parallelizable when multiple cores are available. They are also dynamic, allowing insertions and deletions of new experiments, and progressive in the sense that a coarse-grained version of a Sequence Bloom Tree can be downloaded if needed and subsequently refined as more specific results are needed.
+
+We apply Sequence Bloom Trees to the problem of searching RNA-seq experiments for expressed isoforms. We build a SBT on  all 4XX publicly available RNA-seq experiments in the SRA for the blood, breast, and brain tissues. Each of these tissues is among the top-5 most common tissues represented in the SRA. We use this SBT to search for tissue-specific expressed isoforms. We find that XXX. Sequence Bloom Trees have several natural parameters governing the tradeoff between index size, accuracy, and speed. We provide some theoretical guidance for setting these parameters to ensure the constructed SBTs perform well.
+
+SBT represent a novel way to index large collections of short-read sequencing experiments to enable fast search by sequence. In addition to the application to RNA-seq reported here, we expect SBTs to be useful in the genomic and metagenomic contexts as well. They are our first step toward building a usable, high-performance searchable version of the petabases of sequence data in the SRA.
 
 \section{The Bloom Tree Data Structure}
 
@@ -42,9 +58,16 @@ We introduce the Sequence Bloom Tree data structure for efficiently indexing tho
 \begin{figure}
 \centering
 \includegraphics[width=0.7\textwidth]{BloomTreeSchematic}
-\caption{Schematic of a Bloom Tree. Each node contains a bloom filter containing the kmers present in the sequencing experiments under it.}
+\caption{Schematic of a Bloom Tree. Each node contains a bloom filter containing the kmers present in the sequencing experiments under it.}\label{fig:schematic}
 \end{figure}
 
+Sequence Bloom Trees are built around a collection of bloom filters~\cite{bloom,mitzenmacher}. Bloom filters are an efficient way to store a set of items from a universe $\mathcal{U}$. Each filter consists of a bit vector of length $m$ and a set of $h$ hash functions $h_i : \mathcal{U} \rightarrow [0,m)$ that map items to bits in the bit vector. Insertion of $u \in \mathcal{U}$ is performed by setting bits specified by $h_i(u)$ for $i = 1,\dots,h$ to 1. Querying for membership of $u$ checks these same bits; if they are all $1$, the filter is reported to contain $u$. Because of overlapping hash results, bloom filters have a one-sided error: they may report an item is present when it is not. This error can typically be made quite small by appropriate choice of $m$ and $h$. 
+
+Sequence Bloom Trees (Figure~\ref{fig:schematic}) are trees in which the sequencing experiments are associated with leaves. Each node $v$ of the Sequence Bloom Tree contains a bloom filter that contains the set of kmers present in any read in any experiment in the subtree rooted at $v$. 
+
+SBTs are different than cascading bloom filters~\cite{cascading}, which aim to reduce false positive rates of a single set query by recursively storing false positives in their own bloom filters.
+
+The main challenge with scaling Sequence Bloom Trees to terabytes of sequence is saturation of the filters at levels of the tree near the root. The filter at any node $v$ is the union of the filters of its children. The union of bloom filters $b_1$ and $b_2$ can be efficiently computed by simply bitwise-OR of $b_1$ and $b_2$. However, this means as you move from the leaves to the root, the filters will tend to contain more and more bits set to $1$, increasing their false positive rate. This saturation can be overcome using several techniques: appropriate parameter selection, grouping of related experiments during insertion into the tree, and filter halving to efficiently support filters of varying size within the same tree. We describe these innovations below. Note that filters with poor false positive rates at high levels of the tree only affect query time: accuracy is governed entirely by the false positive rate of the leaf filters.
 
 \subsection{Parameter selection}
 
@@ -150,6 +173,28 @@ A central assumption of the preceding discussion is that the filter at each node
 
 \subsection{Selection of RNA-seq experiments}
 
+\begin{table}
+\centering
+\begin{tabular}{lccc}
+\toprule
+Tissue & Number Experiments & Total Bases & Compressed FASTA Size \\
+\midrule
+Breast & \\
+Brain & \\
+Blood & \\
+\midrule
+Total & \\
+\bottomrule
+\end{tabular}
+\caption{Sequencing experiments from the SRA used in the computational experiments here. These represent all the publicly accessible RNA-seq experiments for these tissues in the SRA.}
+\end{table}
+
+XXX: Describe how experiments were tagged with tissue (briefly), describe which were downloaded and why breast, brain, and blood were chosen. Summarize the size and reference table 1.
+
+\subsection{Implementation}
+
+The implementation used in the experiments below is in C++ and is available as open source at \url{http://www.cs.cmu.edu/~ckingsf/software/bloomtree}. Bitvectors were managed using the Succinct Data Structures Library~\cite{sdsl}. In the experiments below, a single thread was used to construct and search the tree. The filter sizes were chosen so that they have a FPR of $0.5$, resulting in a single hash function on filters of length $m=XXX$. Note that this is the FPR for a single kmer, not the FPR of the entire query. Theorem~\ref{lem:query} shows that even at this high filter FPR, the chance of a false positive for any query sequence of reasonable length (e.g.\@ $> 100$~nt) is very low. Filter halving was not used in these experiments. The cutoff $\theta$ was set to be the same for all nodes and was varied to assess the accuracy / time trade-off as described below.
+
 \subsection{Query speed and accuracy}
 
 - FPR
@@ -161,7 +206,6 @@ A central assumption of the preceding discussion is that the filter at each node
 \subsection{Comparison to fasta32}
 
 \subsection{Compression size}
-
 
 \section{Discussion}
 
@@ -176,5 +220,8 @@ A natural use case for Bloom Trees is that the tree could be built and stored at
 We would like to thank Geet Duggal for invaluable assistance annotating RNA-seq experiments with tissue type, and Guillaume Mar\c{c}ais for essential help modifying Jellyfish 2.0's bloom filter functionality to work with Bloom Trees. 
 
 This work has been partially funded by the US National Science Foundation (CCF-1256087 and CCF-1053918) and US National Institutes of Health (R21HG006913 and R01HG007104). C.K. received support as an Alfred P. Sloan Research Fellow. 
+
+\bibliographystyle{plainnat}
+\bibliography{bloomtree}
 
 \end{document}  
