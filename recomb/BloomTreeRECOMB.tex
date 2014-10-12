@@ -12,6 +12,7 @@
 \geometry{margin=1in,letterpaper} 
 \newtheorem{thm}{Theorem}
 \newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
 \newtheorem{problem}{Problem}
 
 
@@ -85,8 +86,8 @@ In other words, the effective number of items in the union is $n(1-(1-p)^r)/p$.
 \end{lem}
 Equation~\ref{eqn:union} shows that when the overlap is large ($p$ is close to 0), the FPR of  $U$ approaches that of a single filter.
 
-\begin{lem}
-The  number of hashes for a union filter $U$ of $r$ filters that minimizes the FPR of $U$ is
+\begin{thm}\label{lem:hash}
+The  number of hashes that minimizes the FPR of a union filter $U$ is
 \begin{equation}
 h^* = (m (\ln 2) / (n(1-(1-p)^r)/p)) = 
 (p\ln 2) / (1-(1-p)^r)\textit{load}).
@@ -97,21 +98,20 @@ Under this setting of $h$, the FPR of $U$ is
 \left(\frac{1}{2}\right)^{h^*},
 \end{equation}
 which is at most $1/2$ so long as $h^* \geq 1$.
-\end{lem}
+\end{thm}
 \begin{proof}
 Follows directly by treating $U$ as a single filter containing $n(1-(1-p)^r)/p$ items.
 \end{proof}
 
-The case when $h^* < 1$  commonly occurs in practice when applying bloom trees because either the load of each filter is high or the overlap $p$ is low. While using fewer than 1 hash function is not possible, we can simulate having $h^* < 1$ effective hash functions  by randomly sampling only a $h^*$ fraction of the kmers that would be added to $U$ (i.e.\@ by adding a kmer to $U$ with probability $0 < h^* < 1$). This is possible here because when searching for a query string $Q$, we require many kmers of $Q$ to be present in the filter. The effect of omitting kmers due to random sampling therefore can be mitigated (up to a point) by lowering the  threshold $\theta$ of fraction of kmers that are required to be present  for the query to pass the filter.  Before we explore the appropriate setting of $\theta$, we look at the effect of the requirement of repeated queries on the FPR of a union bloom filter on a query string $Q$.
+In the case of Sequence Bloom Trees, we have an advantage that we are not ultimately interested in a single bloom filter query on a kmer, but rather a set of queries derived from the longer query string $Q$.  Thus, we are concerned mostly with the FPR on \emph{queries} rather than FPR on kmers. Theorem~\ref{lem:query} explores the connection between the two:
 
-
-\begin{lem}\label{lem:query}
+\begin{thm}\label{lem:query}
 Let $Q$ be a query string containing $\ell$ distinct kmers. If we require that $>\lfloor\theta\ell\rfloor$ kmers appear in $U$ for $Q$ to pass the filter $U$ with FPR $f$, and if we treat the kmers of $Q$ as being independent, then the probability of a false positive pass through $U$ is
 \begin{equation}\label{eqn:binom}
 1 - \sum_{i=0}^{\lfloor \theta\ell\rfloor} \binom{\ell}{i}f^i(1-f)^{\lfloor\theta\ell\rfloor - i}. 
 \end{equation}
 The above expression is nearly $0$ when $f < \theta$.  
-\end{lem}
+\end{thm}
 \begin{proof}
 Treating each kmer in $Q$ independently allows us to model the repeated queries using a binomial distribution, yielding~\eqref{eqn:binom}. A false positive in $Q$ occurs when $> \lfloor \theta \ell \rfloor$ false positive kmers occur in $U$. Let $X$ be the number of false positive kmers, and let $Y$ be the number of correctly determined kmers. Then
 $\Pr[X > \theta\ell] = \Pr[Y \leq \ell - \theta\ell]$.
@@ -123,17 +123,23 @@ When $\theta \geq f$, we have $\ell - \theta\ell \leq \ell (1-f) = \EE[Y]$, and 
 \end{align}
 \end{proof}
 
-Lemma~\ref{lem:query} shows that so long as the $\theta$ is chosen to be greater than the FPR of $U$, very few false positive queries will pass the filter.
+Theorem~\ref{lem:query} immediately leads to:
+\begin{cor}
+If $\theta$ is chosen to be greater than the FPR of $U$, very few false positive queries will pass the filter.
+\end{cor}
+
+% A scheme for sampling based on fraction hashes
+
+The case when $h^* < 1$  in Lemma~\ref{lem:hash} commonly occurs in practice when applying Bloom Trees because either the load of each filter is high or the overlap $p$ is low. While using fewer than 1 hash function is not possible, we can simulate having $h^* < 1$ effective hash functions  by randomly sampling only a $h^*$ fraction of the kmers that would be added to $U$ (i.e.\@ by adding a kmer to $U$ with probability $0 < h^* < 1$). This is possible here because when searching for a query string $Q$, we require many kmers of $Q$ to be present in the filter. The effect of omitting kmers due to random sampling therefore can be mitigated (up to a point) by lowering the  threshold $\theta$ of fraction of kmers that are required to be present  for the query to pass the filter.  In this situation, the bloom filter can be regarded has having two-sided error: its FPR is $f$ as described above and its false negative rate is now $(1-h^*)(1-f)$, since a false negative occurs if the kmer was not added (which occurs with probability $(1-h^*)$) and this true negative query (from the perspective of the filter) was not reported as present due to a false positive (which occurs with probability $(1-f)$). Note here that a high false positive rate works to our benefit in reducing false negatives due to sampling. 
+
+-- summary theorem about how to set h given a desired query FPR
 
 %1 - \sum = 1 - 2^theta * sum < 1 - 2^{theta ell} * 2^ell = 1 - 2^theta * ell^2
-
-A scheme for sampling based on fraction hashes
-
--- approximation due to independence assumption
+% -- approximation due to independence assumption
 
 -- estimated number of nodes visited?
 
--- summary theorem about how to set h given a desired query FPR
+
 
 \subsection{Query}
 
@@ -161,7 +167,7 @@ Deletion proceeds from the to-be-deleted leaf $s$ up toward the root. Let $p(u)$
 
 \subsection{Running times for insertion, deletion, and query}
 
-Insertion and deletion both follow a single path from the root to a leaf $s$. In each case, two filters per examined node must be read in their entirety to either compute the similarity between the inserted filter and each node's 2 children, or to recompute the union when deleting. If the filters are of length $m$, the running time for insertion or deletion is $O(m\text{depth}(s))$.  Insertion can be made faster if sampling is used to compute the similarity between filters. In this case, $r$ random bits are compared between filters, reducing the running time for insertion to $O(r\text{depth}(s))$. Deletion can be made faster in practice by using lazy deletion: a node is initially only marked deleted and no filters are re-unioned. Once a large enough subtree rooted at $u$ has all of its nodes marked as deleted, the filters on $P_u$ are recomputed. 
+Insertion and deletion both follow a single path from the root to a leaf $s$. In each case, two filters per examined node must be read in their entirety to either compute the similarity between the inserted filter and each node's 2 children, or to recompute the union when deleting. If the filters are of length $m$, the running time for insertion or deletion is $O(m\cdot\text{depth}(s))$.  Insertion can be made faster if sampling is used to compute the similarity between filters. In this case, $r$ random bits are compared between filters, reducing the running time for insertion to $O(r\cdot\text{depth}(s))$. Deletion can be made faster in practice by using lazy deletion: a node is initially only marked deleted and no filters are re-unioned. Once a large enough subtree rooted at $u$ has all of its nodes marked as deleted, the filters on $P_u$ are recomputed. 
 
 The time for both insertion and deletion depends on the depth of the leaf being added or removed. If insertion and deletion are common, this depth can be reduced by creating a more balanced tree. The insertion procedure above favors grouping similar leaves over balance. A modified insertion scheme could favor inserting nodes into smaller subtrees by choosing the child to recurse into based on a combination of filter similarity and subtree size. We do not explore this alternative here as in our use case insertion is rare and deletion never occurs.
 
@@ -182,9 +188,9 @@ A central assumption of the preceding discussion is that the filter at each node
 \toprule
 Tissue & Number Experiments & Total Bases & Compressed FASTA Size \\
 \midrule
-Breast & \\
-Brain & \\
-Blood & \\
+Breast & 1500 \\
+Brain & 466 & \\
+Blood & 1989 \\
 \midrule
 Total & \\
 \bottomrule
@@ -196,7 +202,7 @@ XXX: Describe how experiments were tagged with tissue (briefly), describe which 
 
 \subsection{Implementation}
 
-The implementation used in the experiments below is in C++ and is available as open source at \url{http://www.cs.cmu.edu/~ckingsf/software/bloomtree}. Bitvectors were managed using the Succinct Data Structures Library~\cite{sdsl}. In the experiments below, a single thread was used to construct and search the tree. The filter sizes were chosen so that they have a FPR of $0.5$, resulting in a single hash function on filters of length $m=XXX$. Note that this is the FPR for a single kmer, not the FPR of the entire query. Theorem~\ref{lem:query} shows that even at this high filter FPR, the chance of a false positive for any query sequence of reasonable length (e.g.\@ $> 100$~nt) is very low. Filter halving was not used in these experiments. The cutoff $\theta$ was set to be the same for all nodes and was varied to assess the accuracy / time trade-off as described below.
+The implementation used in the experiments below is in C++ and is available as open source at \url{http://www.cs.cmu.edu/~ckingsf/software/bloomtree}. Bitvectors were managed using the Succinct Data Structures Library~\cite{sdsl}. Kmer counting and bloom filter construction were done using modified version of Jellyfish 2.0~\cite{jellyfish}. In the experiments below, a single thread was used to construct and search the tree. The filter sizes were chosen so that they have a FPR of $0.5$, resulting in a single hash function ($h^* = 1$) on filters of length $m=XXX$ bits. Note that this is the FPR for a single kmer, not the FPR of the entire query. Theorem~\ref{lem:query} shows that even at this high filter FPR, the chance of a false positive for any query sequence of reasonable length (e.g.\@ $> 100$~nt) is very low. Filter halving was not used in these experiments. Since we are interested in finding expressed genes, only kmers with counts greater than a threshold were included in the bloom filters. This cutoff was chosen depending on the file size of the SRA experiment: XXX. The cutoff $\theta$ was set to be the same for all nodes and was varied to assess the accuracy / time trade-off as described below. 
 
 \subsection{Query speed and accuracy}
 
