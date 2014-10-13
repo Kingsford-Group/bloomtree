@@ -140,8 +140,9 @@ BloomTree* BloomTree::union_bloom_filters(const std::string & new_name, BloomTre
 }
 
 void BloomTree::union_into(const BloomTree* other) {
-    dirty = true;
+    //dirty = true;
     bf()->union_into(other->bf());
+    dirty = true;
 }
 
 /*
