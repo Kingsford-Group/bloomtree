@@ -134,8 +134,8 @@ BloomTree* BloomTree::union_bloom_filters(const std::string & new_name, BloomTre
     bt->set_child(0, this);
     bt->set_child(1, f2);
     //bf_cache.insert(bt, bt->usage());
-    bt->unload();
     bt->dirty = true;
+    bt->unload();
     return bt; 
 }
 
