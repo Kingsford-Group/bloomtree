@@ -28,8 +28,12 @@ void assert_is_union(BloomTree* u) {
     if (sim != ubf->size()) {
         std::cerr << "Filter at " << u->name() << " is not the union of its two children!" << std::endl;
         std::cerr << "Sim= " << sim << "Size= " << ubf->size() << std::endl;
+        std::cerr << "Children:" << u->child(0)->name() << " " << u->child(1)->name() << std::endl;
+        std::cerr << std::endl;
     } else {
         std::cerr << "Filter at " << u->name() << " looks good." << std::endl;
+        std::cerr << "Children:" << u->child(0)->name() << " " << u->child(1)->name() << std::endl;
+        std::cerr << std::endl;
     }
     delete ubf;
 }
