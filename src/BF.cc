@@ -99,6 +99,10 @@ void BF::union_into(const BF* other) {
     DIE("not yet implemented");
 }
 
+uint64_t BF::count_ones() const {
+    DIE("not yet implemented");
+    return 0;
+}
 /*============================================*/
 
 UncompressedBF::UncompressedBF(const std::string & f, HashPair hp, int nh) :
@@ -181,6 +185,37 @@ uint64_t UncompressedBF::similarity(const BF* other) const {
         count += __builtin_popcountl((*b1_data++) ^ (*b2_data++));
     }
     return size() - count;
+}
+
+// 00 = 0
+// 01 = 1
+// 10 = 1
+// 11 = 0
+
+int popcount(uint64_t b) {
+    int count = 0;
+    for (int i = 0; i < 64; i++) {
+        if (b % 2) count++;
+        b >>= 1;
+    }
+    return count;
+}
+
+// return the # of 1s in the bitvector
+uint64_t UncompressedBF::count_ones() const {
+    uint64_t* data = bv->data();
+    sdsl::bit_vector::size_type len = bv->size()>>6;
+    uint64_t count = 0;
+    for (sdsl::bit_vector::size_type p = 0; p < len; ++p) {
+        int pc = popcount(*data);
+        DIE_IF(pc != __builtin_popcountl(*data), "popcountl and us disagree about popcount");
+        data++;
+        count += pc;
+    }
+
+    sdsl::rank_support_v<> rbv(bv);
+    DIE_IF(rbv.rank(bv->size()) != count, "SDSL and us disagree about number of 1s");
+    return count;
 }
 
 // union using 64bit integers

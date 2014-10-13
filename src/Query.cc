@@ -19,6 +19,27 @@ bool query_passes(BloomTree* root, const std::set<jellyfish::mer_dna> & q) {
     return (c >= QUERY_THRESHOLD * q.size());
 }
 
+void assert_is_union(BloomTree* u) {
+    BF* ubf = u->child(0)->bf()->union_with("union", u->child(1)->bf());
+
+    // if the similaritity isn't 100%, we stop
+    std::ostringstream oss;
+    oss << "Filter at " << u->name() << " is not the union of its two children!";
+    DIE_IF(ubf->similarity(u->bf()) != ubf->size(), oss.str());
+    delete ubf;
+}
+
+void check_bt(BloomTree* root) {
+    if (root == nullptr) return;
+
+    if (root->child(0) && root->child(1)) {
+        assert_is_union(root);
+    }
+
+    check_bt(root->child(0));
+    check_bt(root->child(1));
+}
+
 // recursively walk down the tree, proceeding to children only
 // if their parent passes the query threshold; 
 void query(

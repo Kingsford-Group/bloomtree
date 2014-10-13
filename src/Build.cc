@@ -327,6 +327,7 @@ BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
 
     while (T != nullptr) {
         std::cerr << "At node: " << T->name() << std::endl;
+        T->increment_usage();
         if (T->num_children() == 0) {
             // this is the tricky case: T is currently a leaf, which means it
             // represents an SRA file, and so it has to stay a leaf. So what we

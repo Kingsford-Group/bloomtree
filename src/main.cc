@@ -17,6 +17,7 @@ std::string bloom_tree_file;
 std::string query_file;
 std::string out_file;
 std::string jfbloom_file;
+std::string bvfile1, bvfile2;
 
 std::string bloom_storage;
 
@@ -37,6 +38,8 @@ void print_usage() {
         << "    \"query\" [--max-filters 32] [-t 0.8] bloomtreefile queryfile\n"
         << "    \"convert\" jfbloomfilter outfile\n"
         << "    \"build\" filterlistfile outfile\n"
+        << "    \"check\" bloomtreefile\n"
+        << "    \"sim\" bvfile1 bvfile2\n"
         << std::endl;
     exit(3);
 }
@@ -66,17 +69,23 @@ int process_options(int argc, char* argv[]) {
         if (optind >= argc-2) print_usage();
         bloom_tree_file = argv[optind+1];
         query_file = argv[optind+2];
-
+    } else if (command == "check") {
+        if (optind >= argc-1) print_usage();
+        bloom_tree_file = argv[optind+1];
+    } else if (command == "sim") {
+        if (optind >= argc-3) print_usage();
+        jfbloom_file = argv[optind+1];
+        bvfile1 = argv[optind+2];
+        bvfile2 = argv[optind+3];
     } else if (command == "convert") {
         if (optind >= argc-2) print_usage();
         jfbloom_file = argv[optind+1];
         out_file = argv[optind+2];
-
     } else if (command == "build") {
         if (optind >= argc-3) print_usage();
         query_file = argv[optind+1];
         out_file = argv[optind+2];
-	bloom_storage = argv[optind+3];
+        bloom_storage = argv[optind+3];
     }
     return optind;
 }
@@ -97,6 +106,33 @@ int main(int argc, char* argv[]) {
 
         std::cerr << "Querying..." << std::endl;
         batch_query_from_file(root, query_file, std::cout);
+
+    } else if (command == "check") {
+        BloomTree* root = read_bloom_tree(bloom_tree_file);
+        std::cerr << "Checking tree" << std::endl;
+        check_bt(root);
+
+    } else if (command == "sim") {
+        // read hash functions
+        int num_hash;
+        HashPair* hashes = get_hash_function(jfbloom_file, num_hash);
+
+        // read bloom filters
+        std::cerr << "Loading BFs:" << bvfile1 << " " << bvfile2 << std::endl;
+        BF* bf1 = load_bf_from_file(bvfile1, *hashes, num_hash);
+        BF* bf2 = load_bf_from_file(bvfile2, *hashes, num_hash);
+        bf1->load();
+        bf2->load();
+
+        std::cerr << "Computing Sim..." << std::endl;
+        int sim = bf1->similarity(bf2);
+        std::cout << "Similarity: " << sim << std::endl;
+        std::cout << "Difference: " << bf1->size() - sim << std::endl;
+        std::cout << "Ones: " << bf1->count_ones() << " " << bf2->count_ones() << std::endl;
+        std::cout << "Size: " << bf1->size() << std::endl;
+
+        delete bf1;
+        delete bf2;
 
     } else if (command == "convert") {
         std::cerr << "Converting..." << std::endl;

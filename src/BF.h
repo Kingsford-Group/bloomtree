@@ -28,6 +28,7 @@ public:
 
     virtual BF* union_with(const std::string & new_name, const BF* f2) const;
     virtual void union_into(const BF* f2);
+    virtual uint64_t count_ones() const;
 
 protected:
     std::string filename;
@@ -50,6 +51,7 @@ public:
     virtual uint64_t similarity(const BF* other) const;
     virtual BF* union_with(const std::string & new_name, const BF* f2) const;
     virtual void union_into(const BF* f2);
+    virtual uint64_t count_ones() const;
 
 protected:
     sdsl::bit_vector* bv;
