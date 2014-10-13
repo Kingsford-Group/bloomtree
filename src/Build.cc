@@ -431,6 +431,8 @@ void dynamic_build(
         
         //  insert this new leaf
         root = insert_bloom_tree(root, N);
+
+        delete f;
     }
     
     // write the tree file
