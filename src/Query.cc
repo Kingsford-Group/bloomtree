@@ -24,8 +24,14 @@ void assert_is_union(BloomTree* u) {
 
     // if the similaritity isn't 100%, we stop
     std::ostringstream oss;
-    oss << "Filter at " << u->name() << " is not the union of its two children!";
-    DIE_IF(ubf->similarity(u->bf()) != ubf->size(), oss.str());
+    uint64_t sim = ubf->similarity(u->bf());
+    if (sim != ubf->size()) {
+        std::cerr << "Filter at " << u->name() << " is not the union of its two children!" << std::endl;
+        std::cerr << "Sim= " << sim << "Size= " << ubf->size() << std::endl;
+        DIE("Stopping.");
+    } else {
+        std::cerr << "Filter at " << u->name() << " looks good." << std::endl;
+    }
     delete ubf;
 }
 
