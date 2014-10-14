@@ -21,6 +21,7 @@ BloomTree::BloomTree(
     hashes(hp),
     num_hash(nh),
     bloom_filter(0),
+    heap_ref(nullptr),
     parent(0),
     usage_count(0),
     dirty(false)
@@ -87,8 +88,6 @@ void BloomTree::increment_usage() {
 // Frees the memory associated with the bloom filter
 void BloomTree::unload() const { 
     // you can't unload something until you remove it from the cache
-    assert(heap_ref == nullptr);
-
     std::cerr << "Unloading " << name() << std::endl;
     
     // free the memory
