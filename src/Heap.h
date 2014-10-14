@@ -3,6 +3,7 @@
 #include <cmath>
 #include <vector>
 #include <cassert>
+#include <iostream>
 
 
 
@@ -46,6 +47,7 @@ public:
         // return the previous top item and delete the heap record
         // we removed.
         T* item = top->item;
+        std::cerr << "Removing heap item with key " << top->key << std::endl;
         delete top;
         return item;
     }
