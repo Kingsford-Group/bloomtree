@@ -33,7 +33,7 @@ public:
 
     // remove and return the item with the min key
     T* pop() {
-        check_heap_order();
+        // check_heap_order();
         heap_reference* top = heap[0];
         auto last = heap.back();
         heap.pop_back();
@@ -55,13 +55,11 @@ public:
 
     // insert a new item with the given key
     heap_reference* insert(T* n, int key) {
-        std::cerr << "In" << std::endl;
         heap.push_back(new heap_reference(heap.size(), n, key));
         return siftup(heap.size()-1);
     }
 
     heap_reference* increase_key(heap_reference* n, int new_key) {
-        std::cerr << "IK" << std::endl;
         assert(heap[n->pos] == n);
         heap[n->pos]->key = new_key;
         return siftdown(n->pos);
@@ -79,7 +77,6 @@ private:
     bool _is_protected;
 
     heap_reference* siftup(int hole) {
-        std::cerr << "Su" << std::endl;
         auto moving = heap[hole];
 
         auto p = heap_parent(hole);
@@ -98,7 +95,6 @@ private:
     }
 
     heap_reference* siftdown(int hole) {
-        std::cerr << "Sd" << std::endl;
         auto moving = heap[hole];
         auto c = minchild(hole);
         while (c > 0 && heap[c]->key < moving->key) {
@@ -134,7 +130,6 @@ private:
     }
 
     bool check_heap_order() {
-        std::cerr << "Ho" << std::endl;
         for (size_t i = heap.size()-1; i > 0; i--) {
             auto parent = heap_parent(i);
             DIE_IF(heap[parent]->key > heap[i]->key, "Heap is not heap ordered!");
