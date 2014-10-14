@@ -29,12 +29,14 @@ public:
 
     int usage() const;
     void increment_usage();
+    static void protected_cache(bool b);
 
 private:
     bool load() const;
     void unload() const;
 
     static Heap<const BloomTree> bf_cache;
+    static void drain_cache();
 
     std::string filename;
     HashPair hashes;

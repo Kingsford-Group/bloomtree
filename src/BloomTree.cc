@@ -101,21 +101,36 @@ void BloomTree::unload() const {
     dirty = false;
 }
 
+void BloomTree::drain_cache() {
+    // if the cache is too big
+    while (bf_cache.size() >= BF_INMEM_LIMIT && !bf_cache.is_protected()) {
+        // toss the bloom filter with the lowest usage
+        const BloomTree* loser = bf_cache.pop();
+        loser->heap_ref = nullptr;
+
+        std::cerr << "Unloading BF: " << loser->filename   
+                  << " cache size = " << bf_cache.size() << std::endl;
+        loser->unload();
+    }
+}
+
+void BloomTree::protected_cache(bool b) {
+    bf_cache.set_protected(b);
+    if (!b) {
+        BloomTree::drain_cache();
+    }
+}
+
 // Loads the bloom filtering into memory
 bool BloomTree::load() const {
     if (bloom_filter == nullptr) {
         std::cerr << "Loading BF: " << filename << std::endl;
 
-        // if the cache is too big
-        if (bf_cache.size() > BF_INMEM_LIMIT) {
-            // toss the bloom filter with the lowest usage
-            const BloomTree* loser = bf_cache.pop();
-            loser->heap_ref = nullptr;
+        // if the cache isn't protected from deleting elements, remove enough
+        // elements so that there is 1 cache spot free (if the cache is
+        // protected, we're allowed to go over the cache limit)
+        if(!bf_cache.is_protected()) BloomTree::drain_cache();
 
-            std::cerr << "Unloading BF: " << loser->filename << std::endl;
-            loser->unload();
-        }
-            
         // read the BF file and set bloom_filter
         bloom_filter = load_bf_from_file(filename, hashes, num_hash);
         bloom_filter->load();
@@ -125,8 +140,12 @@ bool BloomTree::load() const {
     return true;
 }
 
+
 uint64_t BloomTree::similarity(BloomTree* other) const {
-    return this->bf()->similarity(other->bf());
+    protected_cache(true);
+    uint64_t sim = this->bf()->similarity(other->bf());
+    protected_cache(false);
+    return sim;
 }
 
 
@@ -135,7 +154,11 @@ uint64_t BloomTree::similarity(BloomTree* other) const {
 BloomTree* BloomTree::union_bloom_filters(const std::string & new_name, BloomTree* f2) {
     // move the union op into BloomTree?
     BloomTree* bt = new BloomTree(new_name, hashes, num_hash);
+
+    protected_cache(true);
     bt->bloom_filter = bf()->union_with(new_name, f2->bf()); 
+    protected_cache(false);
+
     bt->set_child(0, this);
     bt->set_child(1, f2);
     //bf_cache.insert(bt, bt->usage());
@@ -145,7 +168,9 @@ BloomTree* BloomTree::union_bloom_filters(const std::string & new_name, BloomTre
 }
 
 void BloomTree::union_into(const BloomTree* other) {
+    protected_cache(true);
     bf()->union_into(other->bf());
+    protected_cache(false);
     dirty = true;
 }
 

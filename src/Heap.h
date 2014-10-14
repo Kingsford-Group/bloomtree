@@ -25,7 +25,7 @@ public:
         void invalidate() { pos = -1; } */
     };
 
-    Heap() : heap() {};
+    Heap() : heap(), _is_protected(false) {};
 
     ~Heap() {};
 
@@ -64,8 +64,16 @@ public:
         return siftup(n->pos);
     }
 
+    bool is_protected() {
+        return _is_protected;
+    }
+    void set_protected(bool p) {
+        _is_protected = p;
+    }
+
 private:
     std::vector<heap_reference*> heap;
+    bool _is_protected;
 
     heap_reference* siftup(int hole) {
         auto moving = heap[hole];

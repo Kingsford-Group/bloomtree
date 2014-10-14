@@ -6,21 +6,11 @@
 
 float QUERY_THRESHOLD = 0.9;
 
-// return true if the filter at this node contains > QUERY_THRESHOLD kmers
-bool query_passes(BloomTree* root, const std::set<jellyfish::mer_dna> & q) {
-    assert(q.size() > 0);
-    auto bf = root->bf();
-    unsigned c = 0;
-    for (const auto & m : q) {
-        //DEBUG: std::cout << "checking: " << m.to_str(); 
-        if (bf->contains(m)) c++;
-        //DEBUG: std::cout << c << std::endl;
-    }
-    return (c >= QUERY_THRESHOLD * q.size());
-}
 
 void assert_is_union(BloomTree* u) {
+    BloomTree::protected_cache(true);
     BF* ubf = u->child(0)->bf()->union_with("union", u->child(1)->bf());
+    BloomTree::protected_cache(false);
 
     // if the similaritity isn't 100%, we stop
     std::ostringstream oss;
@@ -47,6 +37,19 @@ void check_bt(BloomTree* root) {
 
     check_bt(root->child(0));
     check_bt(root->child(1));
+}
+
+// return true if the filter at this node contains > QUERY_THRESHOLD kmers
+bool query_passes(BloomTree* root, const std::set<jellyfish::mer_dna> & q) {
+    assert(q.size() > 0);
+    auto bf = root->bf();
+    unsigned c = 0;
+    for (const auto & m : q) {
+        //DEBUG: std::cout << "checking: " << m.to_str(); 
+        if (bf->contains(m)) c++;
+        //DEBUG: std::cout << c << std::endl;
+    }
+    return (c >= QUERY_THRESHOLD * q.size());
 }
 
 // recursively walk down the tree, proceeding to children only
