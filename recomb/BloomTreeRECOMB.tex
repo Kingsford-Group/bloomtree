@@ -130,14 +130,21 @@ If $\theta$ is chosen to be greater than the FPR of $U$, very few false positive
 
 % A scheme for sampling based on fraction hashes
 
-The case when $h^* < 1$  in Lemma~\ref{lem:hash} commonly occurs in practice when applying Bloom Trees because either the load of each filter is high or the overlap $p$ is low. While using fewer than 1 hash function is not possible, we can simulate having $h^* < 1$ effective hash functions  by randomly sampling only a $h^*$ fraction of the kmers that would be added to $U$ (i.e.\@ by adding a kmer to $U$ with probability $0 < h^* < 1$). This is possible here because when searching for a query string $Q$, we require many kmers of $Q$ to be present in the filter. The effect of omitting kmers due to random sampling therefore can be mitigated (up to a point) by lowering the  threshold $\theta$ of fraction of kmers that are required to be present  for the query to pass the filter.  In this situation, the bloom filter can be regarded has having two-sided error: its FPR is $f$ as described above and its false negative rate is now $(1-h^*)(1-f)$, since a false negative occurs if the kmer was not added (which occurs with probability $(1-h^*)$) and this true negative query (from the perspective of the filter) was not reported as present due to a false positive (which occurs with probability $(1-f)$). Note here that a high false positive rate works to our benefit in reducing false negatives due to sampling. 
+The case when $h^* < 1$  in Lemma~\ref{lem:hash} commonly occurs in practice when applying Bloom Trees because either the load of each filter is high or the overlap $p$ is low. While using fewer than 1 hash function is not possible, we can simulate having $h^* < 1$ effective hash functions  by randomly sampling only a $h^*$ fraction of the kmers that would be added to $U$ (i.e.\@ by adding a kmer to $U$ with probability $0 < h^* < 1$). This is possible here because when searching for a query string $Q$, we require many kmers of $Q$ to be present in the filter. The effect of omitting kmers due to random sampling therefore can be mitigated (up to a point) by lowering the  threshold $\theta$ of fraction of kmers that are required to be present  for the query to pass the filter.  In this situation, the bloom filter can be regarded has having two-sided error: its FPR is $f$ as described above and its false negative rate is now $(1-h^*)(1-f)$, since a false negative occurs if the kmer was not added (which occurs with probability $(1-h^*)$) and this true negative query (from the perspective of the filter) was not reported as present due to a false positive (which occurs with probability $(1-f)$). Note here that a high false positive rate works to our benefit in reducing false negatives due to sampling. This leads to the following corollary:
+
+\begin{cor}
+If kmers are sampled with rate $h^* < 1$, using cutoff $\theta' = (1-(1-h^*)(1-f))\theta$ will, with high probability, achieve the same number of false positive queries as using $\theta$ with no sampling.
+\end{cor}
+\begin{proof}
+If $\theta\ell$ kmers of the query are truly present in the subtree, then we expect at least $1-(1-h^*)(1-f))\theta\ell$ to be present after sampling.
+\end{proof}
 
 -- summary theorem about how to set h given a desired query FPR
 
 %1 - \sum = 1 - 2^theta * sum < 1 - 2^{theta ell} * 2^ell = 1 - 2^theta * ell^2
 % -- approximation due to independence assumption
 
--- estimated number of nodes visited?
+% -- estimated number of nodes visited?
 
 
 
