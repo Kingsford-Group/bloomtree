@@ -80,7 +80,7 @@ private:
         auto moving = heap[hole];
 
         auto p = heap_parent(hole);
-        while (p != 0 && heap[hole]->key > moving->key) {
+        while (p != 0 && heap[p]->key > moving->key) {
             // put p into hole
             heap[hole] = heap[p];
             heap[hole]->pos = hole;
