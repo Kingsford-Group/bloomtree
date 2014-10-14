@@ -62,7 +62,7 @@ public:
     heap_reference* increase_key(heap_reference* n, int new_key) {
         assert(heap[n->pos] == n);
         heap[n->pos]->key = new_key;
-        return siftup(n->pos);
+        return siftdown(n->pos);
     }
 
     bool is_protected() {
