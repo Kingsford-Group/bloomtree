@@ -9,7 +9,7 @@
 #include <jellyfish/file_header.hpp>
 
 Heap<const BloomTree> BloomTree::bf_cache;
-int BF_INMEM_LIMIT = 600;
+int BF_INMEM_LIMIT = 500;
 
 // construct a bloom filter with the given filter backing.
 BloomTree::BloomTree(
@@ -21,6 +21,7 @@ BloomTree::BloomTree(
     hashes(hp),
     num_hash(nh),
     bloom_filter(0),
+    heap_ref(nullptr),
     parent(0),
     usage_count(0),
     dirty(false)
@@ -79,15 +80,17 @@ int BloomTree::usage() const {
 void BloomTree::increment_usage() {
     usage_count++;
     // if we're in the cache, let the cache know we've been used.
-    if (heap_ref.is_valid()) {
+    if (heap_ref != nullptr) {
         bf_cache.increase_key(heap_ref, usage_count);
     }
 }
 
 // Frees the memory associated with the bloom filter
 void BloomTree::unload() const { 
-    // free the memory
+    // you can't unload something until you remove it from the cache
     std::cerr << "Unloading " << name() << std::endl;
+    
+    // free the memory
     if (bloom_filter != nullptr) {
         if (dirty) {
             bloom_filter->save();
@@ -102,10 +105,12 @@ void BloomTree::unload() const {
 bool BloomTree::load() const {
     if (bloom_filter == nullptr) {
         std::cerr << "Loading BF: " << filename << std::endl;
+
+        // if the cache is too big
         if (bf_cache.size() > BF_INMEM_LIMIT) {
             // toss the bloom filter with the lowest usage
             const BloomTree* loser = bf_cache.pop();
-            loser->heap_ref.invalidate();
+            loser->heap_ref = nullptr;
 
             std::cerr << "Unloading BF: " << loser->filename << std::endl;
             loser->unload();
@@ -140,7 +145,6 @@ BloomTree* BloomTree::union_bloom_filters(const std::string & new_name, BloomTre
 }
 
 void BloomTree::union_into(const BloomTree* other) {
-    //dirty = true;
     bf()->union_into(other->bf());
     dirty = true;
 }
