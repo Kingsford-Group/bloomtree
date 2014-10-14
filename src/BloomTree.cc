@@ -79,15 +79,19 @@ int BloomTree::usage() const {
 void BloomTree::increment_usage() {
     usage_count++;
     // if we're in the cache, let the cache know we've been used.
-    if (heap_ref.is_valid()) {
+    if (heap_ref != nullptr) {
         bf_cache.increase_key(heap_ref, usage_count);
     }
 }
 
 // Frees the memory associated with the bloom filter
 void BloomTree::unload() const { 
-    // free the memory
+    // you can't unload something until you remove it from the cache
+    assert(heap_ref == nullptr);
+
     std::cerr << "Unloading " << name() << std::endl;
+    
+    // free the memory
     if (bloom_filter != nullptr) {
         if (dirty) {
             bloom_filter->save();
@@ -102,10 +106,12 @@ void BloomTree::unload() const {
 bool BloomTree::load() const {
     if (bloom_filter == nullptr) {
         std::cerr << "Loading BF: " << filename << std::endl;
+
+        // if the cache is too big
         if (bf_cache.size() > BF_INMEM_LIMIT) {
             // toss the bloom filter with the lowest usage
             const BloomTree* loser = bf_cache.pop();
-            loser->heap_ref.invalidate();
+            loser->heap_ref = nullptr;
 
             std::cerr << "Unloading BF: " << loser->filename << std::endl;
             loser->unload();

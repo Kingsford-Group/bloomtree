@@ -40,7 +40,7 @@ private:
     HashPair hashes;
     int num_hash;
     mutable BF* bloom_filter;
-    mutable Heap<const BloomTree>::heap_reference heap_ref;
+    mutable Heap<const BloomTree>::heap_reference* heap_ref;
 
     BloomTree* children[2];
     BloomTree* parent;
