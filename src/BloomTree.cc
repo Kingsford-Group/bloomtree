@@ -161,21 +161,22 @@ BloomTree* BloomTree::union_bloom_filters(const std::string & new_name, BloomTre
 
     protected_cache(true);
     bt->bloom_filter = bf()->union_with(new_name, f2->bf()); 
-    protected_cache(false);
 
     bt->set_child(0, this);
     bt->set_child(1, f2);
     //bf_cache.insert(bt, bt->usage());
     bt->dirty = true;
     bt->unload();
+
+    protected_cache(false);
     return bt; 
 }
 
 void BloomTree::union_into(const BloomTree* other) {
     protected_cache(true);
     bf()->union_into(other->bf());
-    protected_cache(false);
     dirty = true;
+    protected_cache(false);
 }
 
 /*
