@@ -369,6 +369,7 @@ BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
             uint64_t best_sim = 0;
             best_child = -1;
             for (int i = 0; i < 2; i++) {
+                T->child(i)->increment_usage();
                 uint64_t sim = T->child(i)->similarity(N);
                 std::cerr << "Child " << i << " sim =" << sim << std::endl;
                 if (sim >= best_sim) {

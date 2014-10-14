@@ -4,7 +4,7 @@
 #include <vector>
 #include <cassert>
 #include <iostream>
-
+#include "util.h"
 
 
 template<typename T> 
@@ -33,6 +33,7 @@ public:
 
     // remove and return the item with the min key
     T* pop() {
+        check_heap_order();
         heap_reference* top = heap[0];
         auto last = heap.back();
         heap.pop_back();
@@ -128,6 +129,13 @@ private:
         } else return -1;
     }
 
+    bool check_heap_order() {
+        for (size_t i = heap.size()-1; i > 0; i--) {
+            auto parent = heap_parent(i);
+            DIE_IF(heap[parent]->key > heap[i]->key, "Heap is not heap ordered!");
+        }
+        return true;
+    }
 };
 #endif
 

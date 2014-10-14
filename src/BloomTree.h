@@ -28,7 +28,7 @@ public:
     void union_into(const BloomTree* other);
 
     int usage() const;
-    void increment_usage();
+    void increment_usage() const;
     static void protected_cache(bool b);
 
 private:
@@ -46,7 +46,7 @@ private:
 
     BloomTree* children[2];
     BloomTree* parent;
-    int usage_count;
+    mutable int usage_count;
     mutable bool dirty;
 };
 

@@ -77,7 +77,7 @@ int BloomTree::usage() const {
 
 // increment the usage counter, and update the filter's location in
 // the heap if needed.
-void BloomTree::increment_usage() {
+void BloomTree::increment_usage() const {
     usage_count++;
     // if we're in the cache, let the cache know we've been used.
     if (heap_ref != nullptr) {
@@ -136,6 +136,10 @@ bool BloomTree::load() const {
         bloom_filter->load();
         heap_ref = bf_cache.insert(this, usage());
         dirty = false;
+
+        // since we had to load, we bump up the usage to make it less likely we
+        // load again in the near future.
+        increment_usage();
     }
     return true;
 }
