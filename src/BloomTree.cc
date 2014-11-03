@@ -88,7 +88,7 @@ void BloomTree::increment_usage() const {
 // Frees the memory associated with the bloom filter
 void BloomTree::unload() const { 
     // you can't unload something until you remove it from the cache
-    std::cerr << "Unloading " << name() << std::endl;
+    // DEBUG std::cerr << "Unloading " << name() << std::endl;
     
     // free the memory
     if (bloom_filter != nullptr) {
@@ -108,8 +108,8 @@ void BloomTree::drain_cache() {
         const BloomTree* loser = bf_cache.pop();
         loser->heap_ref = nullptr;
 
-        std::cerr << "Unloading BF: " << loser->filename   
-                  << " cache size = " << bf_cache.size() << std::endl;
+        //std::cerr << "Unloading BF: " << loser->filename   
+        //          << " cache size = " << bf_cache.size() << std::endl;
         loser->unload();
     }
 }
@@ -124,7 +124,7 @@ void BloomTree::protected_cache(bool b) {
 // Loads the bloom filtering into memory
 bool BloomTree::load() const {
     if (bloom_filter == nullptr) {
-        std::cerr << "Loading BF: " << filename << std::endl;
+        //std::cerr << "Loading BF: " << filename << std::endl;
 
         // if the cache isn't protected from deleting elements, remove enough
         // elements so that there is 1 cache spot free (if the cache is
@@ -246,7 +246,7 @@ BloomTree* read_bloom_tree(const std::string & filename) {
         std::vector<std::string> fields;
         SplitString(node_info, ',', fields);
         std::string bf_filename = fields[0];
-        std::cerr << "Reading BN info: " << bf_filename << " level = " << level << std::endl;
+        //std::cerr << "Reading BN info: " << bf_filename << " level = " << level << std::endl;
 
         n++;
 

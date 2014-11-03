@@ -149,10 +149,11 @@ void query_batch(BloomTree* root, QuerySet & qs) {
         } 
     }
 
-    if (has_children) {
-        std::cerr << "At " << root->name() << ", " << pass.size() << " queries passed." << std::endl;
+    // $(node name) $(internal / leaf) $(number of matches)
+    if (has_children) { //Changing format
+        std::cout << root->name() << " internal " << pass.size() << std::endl;
     } else {
-        std::cerr << "At leaf " << root->name() << ", " << n << " queries matched." << std::endl;
+        std::cout << root->name() << " leaf " << n << std::endl;
     }
 
     if (pass.size() > 0) {

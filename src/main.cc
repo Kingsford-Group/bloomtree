@@ -35,7 +35,7 @@ static struct option LONG_OPTIONS[] = {
 void print_usage() {
     std::cerr 
         << "Usage: bt [query|convert|build] ...\n"
-        << "    \"query\" [--max-filters 32] [-t 0.8] bloomtreefile queryfile\n"
+        << "    \"query\" [--max-filters 32] [-t 0.8] bloomtreefile queryfile outfile\n"
         << "    \"convert\" jfbloomfilter outfile\n"
         << "    \"build\" filterlistfile outfile\n"
         << "    \"check\" bloomtreefile\n"
@@ -66,9 +66,10 @@ int process_options(int argc, char* argv[]) {
     if (optind >= argc) print_usage();
     command = argv[optind];
     if (command == "query") {
-        if (optind >= argc-2) print_usage();
+        if (optind >= argc-3) print_usage();
         bloom_tree_file = argv[optind+1];
         query_file = argv[optind+2];
+	out_file = argv[optind+3];
     } else if (command == "check") {
         if (optind >= argc-1) print_usage();
         bloom_tree_file = argv[optind+1];
@@ -105,7 +106,8 @@ int main(int argc, char* argv[]) {
         std::cerr << "In memory limit = " << BF_INMEM_LIMIT << std::endl;
 
         std::cerr << "Querying..." << std::endl;
-        batch_query_from_file(root, query_file, std::cout);
+	std::ofstream out(out_file);
+        batch_query_from_file(root, query_file, out);
 
     } else if (command == "check") {
         BloomTree* root = read_bloom_tree(bloom_tree_file);
@@ -125,11 +127,12 @@ int main(int argc, char* argv[]) {
         bf2->load();
 
         std::cerr << "Computing Sim..." << std::endl;
-        int sim = bf1->similarity(bf2);
-        std::cout << "Similarity: " << sim << std::endl;
-        std::cout << "Difference: " << bf1->size() - sim << std::endl;
-        std::cout << "Ones: " << bf1->count_ones() << " " << bf2->count_ones() << std::endl;
-        std::cout << "Size: " << bf1->size() << std::endl;
+        uint64_t sim = bf1->similarity(bf2);
+        std::cout << bf1->size() << " " << sim << std::endl;
+	//std::cout << "Similarity: " << sim << std::endl;
+        //std::cout << "Difference: " << bf1->size() - sim << std::endl;
+        //std::cout << "Ones: " << bf1->count_ones() << " " << bf2->count_ones() << std::endl;
+        //std::cout << "Size: " << bf1->size() << std::endl;
 
         delete bf1;
         delete bf2;

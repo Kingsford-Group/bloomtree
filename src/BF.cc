@@ -20,8 +20,13 @@ BF::~BF() {
 
 // returns true iff the bloom filter contains the given kmer
 bool BF::contains(const jellyfish::mer_dna & m) const {
-    uint64_t h0 = hashes.m1.times(m);
-    uint64_t h1 = hashes.m2.times(m);
+    //std::cout << "TESTING STUFF: " << m.to_str() << std::endl;
+    std::string temp = m.to_str();
+    jellyfish::mer_dna n = jellyfish::mer_dna(temp);
+    n.canonicalize();
+    //std::cout << "Canonical version! " << n.to_str() << std::endl;
+    uint64_t h0 = hashes.m1.times(n);
+    uint64_t h1 = hashes.m2.times(n);
 
     //DEBUG: std::cout << "size = " << bits->size() << std::endl;
     
@@ -38,6 +43,10 @@ bool BF::contains(const jellyfish::mer_dna & m) const {
 
 // convience function
 bool BF::contains(const std::string & str) const {
+    //jellyfish::mer_dna temp = jellyfish::mer_dna(str);
+    //temp.canonicalize();
+    //std::cout << "checking: " << str << "\n";
+    //std::cout << "canonical: " << temp.to_str() << "\n";
     return contains(jellyfish::mer_dna(str));
 }
 
