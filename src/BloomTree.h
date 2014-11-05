@@ -21,7 +21,7 @@ public:
     void set_parent(const BloomTree* p);
     const BloomTree* get_parent() const;
     uint64_t similarity(BloomTree* other) const;
-
+    std::tuple<uint64_t, uint64_t> b_similarity(BloomTree* other) const;
     BF* bf() const;
 
     BloomTree* union_bloom_filters(const std::string & new_name, BloomTree* f2);

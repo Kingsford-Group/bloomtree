@@ -104,6 +104,12 @@ uint64_t BF::similarity(const BF* other) const {
     return 0;
 }
 
+std::tuple<uint64_t, uint64_t> BF::b_similarity(const BF* other) const {
+    DIE("not yet implemented");
+    return std::make_tuple(0,0);
+}
+
+
 void BF::union_into(const BF* other) {
     DIE("not yet implemented");
 }
@@ -195,6 +201,30 @@ uint64_t UncompressedBF::similarity(const BF* other) const {
     }
     return size() - count;
 }
+
+std::tuple<uint64_t, uint64_t> UncompressedBF::b_similarity(const BF* other) const {
+    assert(other->size() == size());
+
+    const uint64_t* b1_data = this->bv->data();
+    const UncompressedBF* o = dynamic_cast<const UncompressedBF*>(other);
+    if (o == nullptr) {
+        DIE("Can only compute similarity on same type of BF.");
+    }
+
+    const uint64_t* b2_data = o->bv->data();
+
+    uint64_t and_count = 0;
+    uint64_t or_count = 0;
+    sdsl::bit_vector::size_type len = size()>>6;
+    for (sdsl::bit_vector::size_type p = 0; p < len; ++p) {
+        and_count += __builtin_popcountl((*b1_data) ^ (*b2_data));
+        or_count += __builtin_popcountl((*b1_data++) | (*b2_data++));
+        //count += __builtin_popcountl((*b1_data++) ^ (*b2_data++));
+    }
+    return std::make_tuple(and_count, or_count);
+//size() - count;
+}
+
 
 // 00 = 0
 // 01 = 1

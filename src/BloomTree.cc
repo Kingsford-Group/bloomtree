@@ -151,6 +151,14 @@ uint64_t BloomTree::similarity(BloomTree* other) const {
     protected_cache(false);
     return sim;
 }
+std::tuple<uint64_t,uint64_t> BloomTree::b_similarity(BloomTree* other) const{
+    protected_cache(true);
+std::cerr << "Before \n";
+    std::tuple<uint64_t, uint64_t> sim = this->bf()->b_similarity(other->bf());
+    protected_cache(false);
+std::cerr << "After \n";
+    return sim;
+}
 
 
 // Create a new node that is the union of the bloom filters
