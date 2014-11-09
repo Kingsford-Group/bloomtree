@@ -39,6 +39,30 @@ void check_bt(BloomTree* root) {
     check_bt(root->child(1));
 }
 
+
+void draw_bt_recur(BloomTree* root, std::ostream& out) {
+    if (root == nullptr) return;
+
+    std::string current = quote(basename(root->name(), ".bf.bv"));
+    
+    if (root->child(0)) {
+        out << current << " -> " << quote(basename(root->child(0)->name(), ".bf.bv")) << " ; " << std::endl;
+        draw_bt_recur(root->child(0), out);
+    } 
+    if (root->child(1)) {
+        out << current << " -> " << quote(basename(root->child(1)->name(), ".bf.bv")) << " ; " << std::endl;
+        draw_bt_recur(root->child(1), out);
+    } 
+}
+
+void draw_bt(BloomTree* root, std::string outfile) {
+    std::ofstream out(outfile.c_str());
+    DIE_IF(!out, "Couldn't open output file");
+    out << "digraph BloomTree {" << std::endl;
+    draw_bt_recur(root, out);
+    out << "}" << std::endl;
+}
+
 // return true if the filter at this node contains > QUERY_THRESHOLD kmers
 bool query_passes(BloomTree* root, const std::set<jellyfish::mer_dna> & q) {
     assert(q.size() > 0);
