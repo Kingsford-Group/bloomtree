@@ -10,7 +10,7 @@ std::string quote(std::string in) {
 
 
 // removes the directory name and optionally the given suffix.
-std::string basename(const std::string & str, const std::string & suff) {
+std::string test_basename(const std::string & str, const std::string & suff) {
     auto p = str.rfind("/");
     std::string s = (p == std::string::npos) ? str : str.substr(p+1);
     auto end = s.size() - suff.size();

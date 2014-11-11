@@ -177,7 +177,7 @@ sdsl::bit_vector* build_filters(
         u = read_bit_vector_from_jf(union_name);
         raw[pos] = u;
 
-        union_name = basename(union_name, std::string(".gz")) + ".rrr";
+        union_name = test_basename(union_name, std::string(".gz")) + ".rrr";
         tree[pos] = new BloomTree(union_name, hashes, nh);
 
     } else {
@@ -401,7 +401,7 @@ void dynamic_build(
     for (const auto & leaf : leaves) {
         // read JF filter and save it as a bv
         sdsl::bit_vector* f = read_bit_vector_from_jf(leaf);
-        std::string filter_name = basename(leaf, std::string(".gz")) + ".bv";
+        std::string filter_name = test_basename(leaf, std::string(".gz")) + ".bv";
         std::string store_name = bloom_storage;
         store_name.append(filter_name);
         sdsl::store_to_file(*f, store_name);

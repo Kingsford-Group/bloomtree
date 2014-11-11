@@ -33,7 +33,7 @@ std::string TrimRight(const std::string & str);
 std::string TrimLeft(const std::string & str);
 std::string Trim(const std::string & str);
 
-std::string basename(const std::string & str, const std::string & suff);
+std::string test_basename(const std::string & str, const std::string & suff);
 std::string nosuffix(const std::string & str, const std::string & suff);
 std::string quote(std::string in);
 

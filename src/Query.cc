@@ -43,14 +43,14 @@ void check_bt(BloomTree* root) {
 void draw_bt_recur(BloomTree* root, std::ostream& out) {
     if (root == nullptr) return;
 
-    std::string current = quote(basename(root->name(), ".bf.bv"));
+    std::string current = quote(test_basename(root->name(), ".bf.bv"));
     
     if (root->child(0)) {
-        out << current << " -> " << quote(basename(root->child(0)->name(), ".bf.bv")) << " ; " << std::endl;
+        out << current << " -> " << quote(test_basename(root->child(0)->name(), ".bf.bv")) << " ; " << std::endl;
         draw_bt_recur(root->child(0), out);
     } 
     if (root->child(1)) {
-        out << current << " -> " << quote(basename(root->child(1)->name(), ".bf.bv")) << " ; " << std::endl;
+        out << current << " -> " << quote(test_basename(root->child(1)->name(), ".bf.bv")) << " ; " << std::endl;
         draw_bt_recur(root->child(1), out);
     } 
 }
