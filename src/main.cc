@@ -40,6 +40,7 @@ void print_usage() {
         << "    \"build\" filterlistfile outfile\n"
         << "    \"check\" bloomtreefile\n"
         << "    \"sim\" bvfile1 bvfile2\n"
+        << "    \"draw\" bloomtreefile out.dot\n"
         << std::endl;
     exit(3);
 }
@@ -73,6 +74,10 @@ int process_options(int argc, char* argv[]) {
     } else if (command == "check") {
         if (optind >= argc-1) print_usage();
         bloom_tree_file = argv[optind+1];
+    } else if (command == "draw") {
+        if (optind >= argc-2) print_usage();
+        bloom_tree_file = argv[optind+1];
+        out_file = argv[optind+2];
     } else if (command == "sim") {
         if (optind >= argc-3) print_usage();
         jfbloom_file = argv[optind+1];
@@ -106,8 +111,13 @@ int main(int argc, char* argv[]) {
         std::cerr << "In memory limit = " << BF_INMEM_LIMIT << std::endl;
 
         std::cerr << "Querying..." << std::endl;
-	std::ofstream out(out_file);
+        std::ofstream out(out_file);
         batch_query_from_file(root, query_file, out);
+
+    } else if (command == "draw") {
+        std::cerr << "Drawing tree in " << bloom_tree_file << " to " << out_file << std::endl;
+        BloomTree* root = read_bloom_tree(bloom_tree_file, false);
+        draw_bt(root, out_file);
 
     } else if (command == "check") {
         BloomTree* root = read_bloom_tree(bloom_tree_file);

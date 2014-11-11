@@ -234,13 +234,14 @@ HashPair* get_hash_function(const std::string & matrix_file, int & nh) {
    This function will return a pointer to the root of the
    constructed bloom tree.
 */
-BloomTree* read_bloom_tree(const std::string & filename) {
+BloomTree* read_bloom_tree(const std::string & filename, bool read_hashes) {
     std::ifstream in(filename.c_str());
 
     std::list<BloomTree*> path;
     BloomTree* tree_root = 0;
     int n = 0;
-    HashPair* hashes = nullptr;
+    // if read_hashes is false, you must promise never to access the bloom filters
+    HashPair* hashes = new HashPair; // useless hashpair used if read_hashes is false
     int num_hashes = 0;
 
     std::string node_info;
@@ -266,8 +267,10 @@ BloomTree* read_bloom_tree(const std::string & filename) {
             DIE_IF(tree_root != 0, "Can't set root twice!");
 
             // set the hash function up
-            DIE_IF(fields.size() < 2, "Must specify hash file for root.");
-            hashes = get_hash_function(fields[1], num_hashes);
+            if (read_hashes) {
+                DIE_IF(fields.size() < 2, "Must specify hash file for root.");
+                hashes = get_hash_function(fields[1], num_hashes);
+            }
 
             // create the root node
             bn = new BloomTree(bf_filename, *hashes, num_hashes); 

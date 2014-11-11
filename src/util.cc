@@ -3,6 +3,34 @@
 #include <fenv.h>
 #include <signal.h>
 
+std::string quote(std::string in) {
+    // TODO: handle quotes embedded in input string
+    return "\"" + in + "\"";
+}
+
+
+// removes the directory name and optionally the given suffix.
+std::string basename(const std::string & str, const std::string & suff) {
+    auto p = str.rfind("/");
+    std::string s = (p == std::string::npos) ? str : str.substr(p+1);
+    auto end = s.size() - suff.size();
+    if (s.substr(end) == suff) {
+        return s.substr(0, s.size() - suff.size());
+    }
+    return s;
+}
+
+std::string nosuffix(const std::string & str, const std::string & suff) {
+    std::string s = str;
+    auto end = s.size() - suff.size();
+    if (s.substr(end) == suff) {
+        return s.substr(0, s.size() - suff.size());
+    }
+    return s;
+
+}
+
+
 std::string TrimRight(const std::string & str) {
     std::string tmp = str;
     return tmp.erase(tmp.find_last_not_of(" ") + 1);
