@@ -194,13 +194,20 @@ uint64_t UncompressedBF::similarity(const BF* other) const {
 
     const uint64_t* b2_data = o->bv->data();
     
-    uint64_t count = 0;
+    uint64_t xor_count = 0;
+    uint64_t or_count = 0;
     sdsl::bit_vector::size_type len = size()>>6;
     for (sdsl::bit_vector::size_type p = 0; p < len; ++p) {
-        count += __builtin_popcountl((*b1_data++) ^ (*b2_data++));
+        xor_count += __builtin_popcountl((*b1_data) ^ (*b2_data));
+        or_count += __builtin_popcountl((*b1_data++) | (*b2_data++));
+	//count += __builtin_popcountl((*b1_data++) ^ (*b2_data++));
     }
-    return size() - count;
+   
+    return uint64_t(float(or_count - xor_count) / float(or_count) * size() );
+//size() - count;
 }
+
+
 
 std::tuple<uint64_t, uint64_t> UncompressedBF::b_similarity(const BF* other) const {
     assert(other->size() == size());
