@@ -138,10 +138,10 @@ int main(int argc, char* argv[]) {
 
         std::cerr << "Computing Sim..." << std::endl;
         uint64_t test = bf1->similarity(bf2);
-	std::tuple<uint64_t, uint64_t> sim = bf1->b_similarity(bf2);
+	//std::tuple<uint64_t, uint64_t> sim = bf1->b_similarity(bf2);
 	std::cerr << "Done " << std::endl;
 	std::cout << test << std::endl;
-	std::cout << bf1->size() << " " << std::get<0>(sim) << " " << std::get<1>(sim) << std::endl;
+	//std::cout << bf1->size() << " " << std::get<0>(sim) << " " << std::get<1>(sim) << std::endl;
 
 	//uint64_t sim = bf1->similarity(bf2);
         //std::cout << bf1->size() << " " << sim << std::endl;
