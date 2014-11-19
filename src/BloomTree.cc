@@ -145,9 +145,9 @@ bool BloomTree::load() const {
 }
 
 
-uint64_t BloomTree::similarity(BloomTree* other) const {
+uint64_t BloomTree::similarity(BloomTree* other, int type) const {
     protected_cache(true);
-    uint64_t sim = this->bf()->similarity(other->bf());
+    uint64_t sim = this->bf()->similarity(other->bf(), type);
     protected_cache(false);
     return sim;
 }

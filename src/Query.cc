@@ -5,7 +5,7 @@
 
 float QUERY_THRESHOLD = 0.9;
 
-
+// ** THIS IS NOW PARTIALLY DEPRICATED. ONLY WORKS WITH HARDCODED SIMILARITY TYPE
 void assert_is_union(BloomTree* u) {
     BloomTree::protected_cache(true);
     BF* ubf = u->child(0)->bf()->union_with("union", u->child(1)->bf());
@@ -13,7 +13,7 @@ void assert_is_union(BloomTree* u) {
 
     // if the similaritity isn't 100%, we stop
     std::ostringstream oss;
-    uint64_t sim = ubf->similarity(u->bf());
+    uint64_t sim = ubf->similarity(u->bf(),0);
     if (sim != ubf->size()) {
         std::cerr << "Filter at " << u->name() << " is not the union of its two children!" << std::endl;
         std::cerr << "Sim= " << sim << "Size= " << ubf->size() << std::endl;

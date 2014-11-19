@@ -20,7 +20,7 @@ public:
     int num_children() const;
     void set_parent(const BloomTree* p);
     const BloomTree* get_parent() const;
-    uint64_t similarity(BloomTree* other) const;
+    uint64_t similarity(BloomTree* other, int type) const;
     std::tuple<uint64_t, uint64_t> b_similarity(BloomTree* other) const;
     BF* bf() const;
 

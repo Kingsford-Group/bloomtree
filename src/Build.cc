@@ -287,7 +287,7 @@ void build_bt_from_jfbloom(
 
 // walk down T, finding the best path; insert N (which could be a subtree) at the leaf
 // we come to, and union all the parents
-BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
+BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N, int type) {
 
     std::cerr << "Inserting leaf " << N->name() << " ... " << std::endl;
     // save the root to return
@@ -349,7 +349,7 @@ BloomTree* insert_bloom_tree(BloomTree* T, BloomTree* N) {
             best_child = -1;
             for (int i = 0; i < 2; i++) {
                 T->child(i)->increment_usage();
-                uint64_t sim = T->child(i)->similarity(N);
+                uint64_t sim = T->child(i)->similarity(N,type);
                 std::cerr << "Child " << i << " sim =" << sim << std::endl;
                 if (sim >= best_sim) {
                     best_sim = sim;
@@ -388,7 +388,8 @@ void delete_bloom_tree(BloomTree* T) {
 void dynamic_build(
     const std::vector<std::string> & leaves, 
     const std::string & outf,
-    const std::string & bloom_storage
+    const std::string & bloom_storage,
+    int type
 ) {
     // create the hashes
     int nh = 0;
@@ -410,7 +411,7 @@ void dynamic_build(
         BloomTree* N = new BloomTree(store_name, *hashes, nh);
         
         //  insert this new leaf
-        root = insert_bloom_tree(root, N);
+        root = insert_bloom_tree(root, N, type);
 
         delete f;
     }

@@ -7,6 +7,6 @@
 std::vector<std::string> read_filter_list(const std::string & inf);
 void convert_jfbloom_to_rrr(const std::string & jfbloom_file, const std::string & out_file);
 void build_bt_from_jfbloom(const std::vector<std::string> & leaves, const std::string & outf, unsigned parallel_level);
-void dynamic_build(const std::vector<std::string> & leaves, const std::string & outf, const std::string & bloom_storage);
+void dynamic_build(const std::vector<std::string> & leaves, const std::string & outf, const std::string & bloom_storage, int type);
 
 #endif

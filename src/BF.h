@@ -24,7 +24,7 @@ public:
     virtual bool contains(const jellyfish::mer_dna & m) const;
     bool contains(const std::string & str) const;
 
-    virtual uint64_t similarity(const BF* other) const;
+    virtual uint64_t similarity(const BF* other, int type) const;
     virtual std::tuple<uint64_t, uint64_t> b_similarity(const BF* other) const;
     virtual BF* union_with(const std::string & new_name, const BF* f2) const;
     virtual void union_into(const BF* f2);
@@ -48,7 +48,7 @@ public:
 
     virtual int operator[](uint64_t pos) const;
     virtual uint64_t size() const;
-    virtual uint64_t similarity(const BF* other) const;
+    virtual uint64_t similarity(const BF* other, int type) const;
     virtual std::tuple<uint64_t, uint64_t> b_similarity(const BF* other) const;
     virtual BF* union_with(const std::string & new_name, const BF* f2) const;
     virtual void union_into(const BF* f2);

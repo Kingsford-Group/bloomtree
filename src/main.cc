@@ -18,7 +18,7 @@ std::string query_file;
 std::string out_file;
 std::string jfbloom_file;
 std::string bvfile1, bvfile2;
-
+std::string sim_type;
 std::string bloom_storage;
 
 unsigned parallel_level = 3; // no parallelism by default
@@ -37,9 +37,9 @@ void print_usage() {
         << "Usage: bt [query|convert|build] ...\n"
         << "    \"query\" [--max-filters 32] [-t 0.8] bloomtreefile queryfile outfile\n"
         << "    \"convert\" jfbloomfilter outfile\n"
-        << "    \"build\" filterlistfile outfile\n"
+        << "    \"build\" filterlistfile outfile file_storage sim_type\n"
         << "    \"check\" bloomtreefile\n"
-        << "    \"sim\" bvfile1 bvfile2\n"
+        << "    \"sim\" bloombase bvfile1 bvfile2 sim_type\n"
         << "    \"draw\" bloomtreefile out.dot\n"
 	<< "    \"compress\" bloomtreefile outfile\n"
         << std::endl;
@@ -80,19 +80,21 @@ int process_options(int argc, char* argv[]) {
         bloom_tree_file = argv[optind+1];
         out_file = argv[optind+2];
     } else if (command == "sim") {
-        if (optind >= argc-3) print_usage();
+        if (optind >= argc-4) print_usage();
         jfbloom_file = argv[optind+1];
         bvfile1 = argv[optind+2];
         bvfile2 = argv[optind+3];
+	sim_type = argv[optind+4];
     } else if (command == "convert") {
         if (optind >= argc-2) print_usage();
         jfbloom_file = argv[optind+1];
         out_file = argv[optind+2];
     } else if (command == "build") {
-        if (optind >= argc-3) print_usage();
+        if (optind >= argc-4) print_usage();
         query_file = argv[optind+1];
         out_file = argv[optind+2];
         bloom_storage = argv[optind+3];
+	sim_type = argv[optind+4];
     } else if (command == "compress") {
 	if (optind >= argc-2) print_usage();
 	bloom_tree_file = argv[optind+1];
@@ -142,7 +144,7 @@ int main(int argc, char* argv[]) {
         bf2->load();
 
         std::cerr << "Computing Sim..." << std::endl;
-        uint64_t test = bf1->similarity(bf2);
+        uint64_t test = bf1->similarity(bf2, std::stoi(sim_type));
 	//std::tuple<uint64_t, uint64_t> sim = bf1->b_similarity(bf2);
 	std::cerr << "Done " << std::endl;
 	std::cout << test << std::endl;
@@ -166,7 +168,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "Building..." << std::endl;
         std::vector<std::string> leaves = read_filter_list(query_file); //not a query file
         //build_bt_from_jfbloom(leaves, out_file, parallel_level);
-        dynamic_build(leaves, out_file, bloom_storage);
+        dynamic_build(leaves, out_file, bloom_storage, std::stoi(sim_type));
     } else if (command == "compress") {
 	std::cerr << "Compressing.." << std::endl;
 	BloomTree* root = read_bloom_tree(bloom_tree_file, false);

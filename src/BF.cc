@@ -99,7 +99,7 @@ BF* BF::union_with(const std::string & new_name, const BF* f2) const {
     return out;
 }
 
-uint64_t BF::similarity(const BF* other) const {
+uint64_t BF::similarity(const BF* other, int type) const {
     DIE("not yet implemented");
     return 0;
 }
@@ -187,7 +187,7 @@ void UncompressedBF::union_into(const BF* f2) {
     }
 }
 
-uint64_t UncompressedBF::similarity(const BF* other) const {
+uint64_t UncompressedBF::similarity(const BF* other, int type) const {
     assert(other->size() == size());
 
     const uint64_t* b1_data = this->bv->data();
@@ -197,18 +197,30 @@ uint64_t UncompressedBF::similarity(const BF* other) const {
     }
 
     const uint64_t* b2_data = o->bv->data();
+    	if (type == 1) {
+		uint64_t xor_count = 0;
+	   	uint64_t or_count = 0;
     
-    uint64_t xor_count = 0;
-    uint64_t or_count = 0;
-    sdsl::bit_vector::size_type len = size()>>6;
-    for (sdsl::bit_vector::size_type p = 0; p < len; ++p) {
-        xor_count += __builtin_popcountl((*b1_data) ^ (*b2_data));
-        or_count += __builtin_popcountl((*b1_data++) | (*b2_data++));
-	//count += __builtin_popcountl((*b1_data++) ^ (*b2_data++));
-    }
+		sdsl::bit_vector::size_type len = size()>>6;
+		for (sdsl::bit_vector::size_type p = 0; p < len; ++p) {
+        		xor_count += __builtin_popcountl((*b1_data) ^ (*b2_data));
+	        	or_count += __builtin_popcountl((*b1_data++) | (*b2_data++));
+			//count += __builtin_popcountl((*b1_data++) ^ (*b2_data++));
+  	  	}
    
-    return uint64_t(float(or_count - xor_count) / float(or_count) * size() );
-//size() - count;
+    		return uint64_t(float(or_count - xor_count) / float(or_count) * size() );
+	}
+	else if (type == 0) {
+		uint64_t count = 0;
+		sdsl::bit_vector::size_type len = size()>>6;
+                for (sdsl::bit_vector::size_type p = 0; p < len; ++p) {
+                        count += __builtin_popcountl((*b1_data++) ^ (*b2_data++));
+                }
+		return size() - count;
+	}
+	
+	DIE("ERROR: ONLY TWO TYPES IMPLEMENTED");
+	return 0;
 }
 
 
