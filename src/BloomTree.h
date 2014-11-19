@@ -53,5 +53,5 @@ private:
 HashPair* get_hash_function(const std::string & matrix_file, int & nh);
 BloomTree* read_bloom_tree(const std::string & filename, bool read_hashes=true);
 void write_bloom_tree(const std::string & outfile, BloomTree* root, const std::string & matrix_file);
-
+void write_compressed_bloom_tree(const std::string & outfile, BloomTree* root, const std::string & matrix_file);
 #endif

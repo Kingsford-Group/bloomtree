@@ -41,7 +41,7 @@ void print_usage() {
         << "    \"check\" bloomtreefile\n"
         << "    \"sim\" bvfile1 bvfile2\n"
         << "    \"draw\" bloomtreefile out.dot\n"
-	<< "    \"compress\" bloomtreefile\n"
+	<< "    \"compress\" bloomtreefile outfile\n"
         << std::endl;
     exit(3);
 }
@@ -94,8 +94,9 @@ int process_options(int argc, char* argv[]) {
         out_file = argv[optind+2];
         bloom_storage = argv[optind+3];
     } else if (command == "compress") {
-	if (optind >= argc-1) print_usage();
+	if (optind >= argc-2) print_usage();
 	bloom_tree_file = argv[optind+1];
+	out_file = argv[optind+2];
     }
     return optind;
 }
@@ -163,13 +164,20 @@ int main(int argc, char* argv[]) {
 
     } else if (command == "build") {
         std::cerr << "Building..." << std::endl;
-        std::vector<std::string> leaves = read_filter_list(query_file);
+        std::vector<std::string> leaves = read_filter_list(query_file); //not a query file
         //build_bt_from_jfbloom(leaves, out_file, parallel_level);
         dynamic_build(leaves, out_file, bloom_storage);
     } else if (command == "compress") {
 	std::cerr << "Compressing.." << std::endl;
 	BloomTree* root = read_bloom_tree(bloom_tree_file, false);
+	std::ifstream in(bloom_tree_file.c_str());
+	std::string header;
+	getline(in, header);
+	std::vector<std::string> fields;
+	SplitString(header, ',', fields);
+	
 	compress_bt(root);
+	write_compressed_bloom_tree(out_file, root, fields[1]);
     }
     std::cerr << "Done." << std::endl;
 }

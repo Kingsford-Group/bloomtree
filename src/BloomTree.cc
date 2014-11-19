@@ -328,3 +328,30 @@ void write_bloom_tree(
     std::cerr << "Done." << std::endl;
 }
 
+void write_compressed_bloom_tree_helper(std::ostream & out, BloomTree* root, int level=1) {
+    std::string lstr(level, '*');
+
+    for (int i = 0; i < 2; i++) {
+        if (root->child(i) != nullptr) {
+            out << lstr << root->child(i)->name() << ".rrr" << std::endl;
+            write_compressed_bloom_tree_helper(out, root->child(i), level+1);
+        }
+    }
+}
+
+// write the bloom tree file format in a way that can be read by
+// read_bloom_tree()
+void write_compressed_bloom_tree(
+    const std::string & outfile,
+    BloomTree* root,
+    const std::string & matrix_file
+) {
+    std::cerr << "Writing to " << outfile << std::endl;
+    std::ofstream out(outfile.c_str());
+    out << root->name() << ".rrr," << matrix_file << std::endl;
+    write_compressed_bloom_tree_helper(out, root);
+    std::cerr << "Done." << std::endl;
+}
+
+
+
