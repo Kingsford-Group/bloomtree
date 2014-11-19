@@ -29,7 +29,7 @@ public:
     virtual BF* union_with(const std::string & new_name, const BF* f2) const;
     virtual void union_into(const BF* f2);
     virtual uint64_t count_ones() const;
-
+    virtual void compress();
 protected:
     std::string filename;
     sdsl::rrr_vector<255>* bits;
@@ -53,7 +53,7 @@ public:
     virtual BF* union_with(const std::string & new_name, const BF* f2) const;
     virtual void union_into(const BF* f2);
     virtual uint64_t count_ones() const;
-
+    virtual void compress();
 protected:
     sdsl::bit_vector* bv;
 };

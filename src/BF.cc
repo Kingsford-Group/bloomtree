@@ -118,6 +118,10 @@ uint64_t BF::count_ones() const {
     DIE("not yet implemented");
     return 0;
 }
+
+void BF::compress() {
+	DIE("Cant compress rrr further with existing code base");
+}
 /*============================================*/
 
 UncompressedBF::UncompressedBF(const std::string & f, HashPair hp, int nh) :
@@ -262,6 +266,12 @@ uint64_t UncompressedBF::count_ones() const {
     sdsl::rank_support_v<> rbv(bv);
     DIE_IF(rbv.rank(bv->size()) != count, "SDSL and us disagree about number of 1s");
     return count;
+}
+
+void UncompressedBF::compress() {
+	sdsl::rrr_vector<255> rrr(*bv);
+	std::cerr << "Compressed RRR vector is " << sdsl::size_in_mega_bytes(rrr) << std::endl;
+	sdsl::store_to_file(rrr,filename+".rrr");
 }
 
 // union using 64bit integers

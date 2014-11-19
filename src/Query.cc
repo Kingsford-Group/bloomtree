@@ -1,7 +1,6 @@
 #include "Query.h"
 #include "Kmers.h"
 #include "util.h"
-
 #include <cassert>
 
 float QUERY_THRESHOLD = 0.9;
@@ -62,6 +61,20 @@ void draw_bt(BloomTree* root, std::string outfile) {
     draw_bt_recur(root, out);
     out << "}" << std::endl;
 }
+
+void compress_bt(BloomTree* root) {
+	if (root == nullptr) return;
+
+	root->bf()->compress();
+
+	if (root->child(0)) {
+		compress_bt(root->child(0));
+	}
+	if (root->child(1)){
+		compress_bt(root->child(1));
+	}
+}
+
 
 // return true if the filter at this node contains > QUERY_THRESHOLD kmers
 bool query_passes(BloomTree* root, const std::set<jellyfish::mer_dna> & q) {
