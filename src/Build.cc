@@ -1,6 +1,7 @@
 #include "Build.h"
 #include "BloomTree.h"
 #include "util.h"
+#include "Query.h"
 #include <cmath>
 #include <sstream>
 #include <cstring>
@@ -396,7 +397,8 @@ void dynamic_build(
     HashPair* hashes = get_hash_function(leaves[0], nh); 
 
     BloomTree* root = nullptr;
-
+    
+    int count = 0;
     // for every leaf
     std::cerr << "Inserting leaves into tree..." << std::endl;
     for (const auto & leaf : leaves) {
@@ -414,6 +416,13 @@ void dynamic_build(
         root = insert_bloom_tree(root, N, type);
 
         delete f;
+	count++;
+	if (count % 100 == 0){
+		std::string temp_out = outf;
+		temp_out.append("_");
+		temp_out.append(std::to_string(count));
+		draw_bt(root, temp_out);
+	}
     }
     
     // write the tree file

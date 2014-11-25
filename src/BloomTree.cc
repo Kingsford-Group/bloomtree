@@ -151,6 +151,7 @@ uint64_t BloomTree::similarity(BloomTree* other, int type) const {
     protected_cache(false);
     return sim;
 }
+
 std::tuple<uint64_t,uint64_t> BloomTree::b_similarity(BloomTree* other) const{
     protected_cache(true);
 std::cerr << "Before \n";
