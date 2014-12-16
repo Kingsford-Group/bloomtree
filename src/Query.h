@@ -29,4 +29,6 @@ void query(BloomTree* root, const std::set<jellyfish::mer_dna> & q, std::vector<
 void check_bt(BloomTree* root);
 void draw_bt(BloomTree* root, std::string outfile);
 void compress_bt(BloomTree* root);
+
+void leaf_query_from_file(BloomTree* root, const std::string & fn, std::ostream & o);
 #endif

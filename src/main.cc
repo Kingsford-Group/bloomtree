@@ -20,7 +20,7 @@ std::string jfbloom_file;
 std::string bvfile1, bvfile2;
 std::string sim_type;
 std::string bloom_storage;
-
+std::string leaf_only;
 unsigned parallel_level = 3; // no parallelism by default
 
 const char * OPTIONS = "t:p:f:";
@@ -35,7 +35,7 @@ static struct option LONG_OPTIONS[] = {
 void print_usage() {
     std::cerr 
         << "Usage: bt [query|convert|build] ...\n"
-        << "    \"query\" [--max-filters 32] [-t 0.8] bloomtreefile queryfile outfile\n"
+        << "    \"query\" [--max-filters 32] [-t 0.8] bloomtreefile queryfile outfile leaf_only\n"
         << "    \"convert\" jfbloomfilter outfile\n"
         << "    \"build\" filterlistfile outfile file_storage sim_type\n"
         << "    \"check\" bloomtreefile\n"
@@ -68,10 +68,11 @@ int process_options(int argc, char* argv[]) {
     if (optind >= argc) print_usage();
     command = argv[optind];
     if (command == "query") {
-        if (optind >= argc-3) print_usage();
+        if (optind >= argc-4) print_usage();
         bloom_tree_file = argv[optind+1];
         query_file = argv[optind+2];
 	out_file = argv[optind+3];
+	leaf_only = argv[optind+4];
     } else if (command == "check") {
         if (optind >= argc-1) print_usage();
         bloom_tree_file = argv[optind+1];
@@ -119,7 +120,11 @@ int main(int argc, char* argv[]) {
 
         std::cerr << "Querying..." << std::endl;
         std::ofstream out(out_file);
-        batch_query_from_file(root, query_file, out);
+	if (leaf_only == "1"){
+		leaf_query_from_file(root, query_file, out);
+	} else {
+	        batch_query_from_file(root, query_file, out);
+	}
 
     } else if (command == "draw") {
         std::cerr << "Drawing tree in " << bloom_tree_file << " to " << out_file << std::endl;
