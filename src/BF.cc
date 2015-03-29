@@ -18,6 +18,27 @@ BF::~BF() {
     }
 }
 
+void BF::add(const jellyfish::mer_dna & m) {
+    jellyfish::mer_dna can(m);
+    can.canonicalize();
+    uint64_t h0 = hashes.m1.times(can);
+    uint64_t h1 = hashes.m2.times(can);
+    
+    const size_t base = h0 % size();
+    const size_t inc = h1 % size();
+
+    for (unsigned long i = 0; i < num_hash; ++i) {
+        const size_t pos = (base + i * inc) % size();
+        this->set_bit(pos);
+    }
+}
+
+// set the bit at position 1 (can't use operator[] b/c we'd need
+// to return a proxy, which is more trouble than its worth)
+void BF::set_bit(uint64_t p) {
+    DIE("Compressed BF are not mutable!");
+}
+
 // returns true iff the bloom filter contains the given kmer
 bool BF::contains(const jellyfish::mer_dna & m) const {
     //std::cout << "TESTING STUFF: " << m.to_str() << std::endl;
@@ -156,6 +177,10 @@ uint64_t UncompressedBF::size() const {
 
 int UncompressedBF::operator[](uint64_t pos) const {
     return (*bv)[pos];
+}
+
+void UncompressedBF::set_bit(uint64_t p) {
+    (*bv)[p] = 1;
 }
 
 BF* UncompressedBF::union_with(const std::string & new_name, const BF* f2) const {

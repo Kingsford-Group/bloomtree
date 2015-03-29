@@ -3,10 +3,13 @@
 #include "BloomTree.h"
 #include "BF.h"
 #include "util.h"
+#include "Count.h"
 
 #include <string>
 #include <cstdlib>
 #include <getopt.h>
+
+#include <jellyfish/file_header.hpp>
 
 /* TODO:
  */
@@ -21,6 +24,12 @@ std::string bvfile1, bvfile2;
 std::string sim_type;
 std::string bloom_storage;
 std::string leaf_only;
+
+std::string hashes_file;
+unsigned nb_hashes;
+uint64_t bf_size;
+
+
 unsigned parallel_level = 3; // no parallelism by default
 
 const char * OPTIONS = "t:p:f:";
@@ -29,24 +38,46 @@ static struct option LONG_OPTIONS[] = {
     {"max-filters", required_argument, 0, 'f'},
     {"threads", required_argument, 0, 'p'},
     {"query-threshold", required_argument, 0, 't'},
+    {"k", required_argument, 0, 'k'},
     {0,0,0,0}
 };
 
 void print_usage() {
     std::cerr 
         << "Usage: bt [query|convert|build] ...\n"
-        << "    \"query\" [--max-filters 32] [-t 0.8] bloomtreefile queryfile outfile leaf_only\n"
-        << "    \"convert\" jfbloomfilter outfile\n"
+        << "    \"hashes\" [-k 20] hashfile nb_hashes\n"
+        << "    \"count\" hashfile fasta_in filter_out\n"
         << "    \"build\" filterlistfile outfile file_storage sim_type\n"
+	    << "    \"compress\" bloomtreefile outfile\n"
+
         << "    \"check\" bloomtreefile\n"
-        << "    \"sim\" bloombase bvfile1 bvfile2 sim_type\n"
         << "    \"draw\" bloomtreefile out.dot\n"
-	<< "    \"compress\" bloomtreefile outfile\n"
+
+        << "    \"query\" [--max-filters 32] [-t 0.8] bloomtreefile queryfile outfile leaf_only\n"
+
+        << "    \"convert\" jfbloomfilter outfile\n"
+        << "    \"sim\" bloombase bvfile1 bvfile2 sim_type\n"
         << std::endl;
     exit(3);
 }
 
+// construct a new set of hashes for the current k
+// also record k and the number of hash applications
+void construct_hashes(std::string & hashesfile, int nh) {
+    HashPair hp;
+    jellyfish::file_header fh;
+    fh.matrix(hp.m1, 1);
+    fh.matrix(hp.m2, 2);
+    fh.key_len(jellyfish::mer_dna::k() * 2);
+    fh.nb_hashes(nh);
+    std::ofstream hashesout(hashesfile.c_str());
+    fh.write(hashesout);
+    hashesout.close();
+}
+
+
 int process_options(int argc, char* argv[]) {
+    int k = 20;
     int a;
     while ((a=getopt_long(argc, argv, OPTIONS, LONG_OPTIONS, 0)) != -1) {
         switch(a) {
@@ -59,11 +90,20 @@ int process_options(int argc, char* argv[]) {
             case 'f':
                 BF_INMEM_LIMIT = unsigned(atoi(optarg));
                 break;
+
+            case 'k': 
+                k = atoi(optarg);
+                break;
+
             default:
                 std::cerr << "Unknown option." << std::endl;
                 print_usage();
         }
     }
+
+    jellyfish::mer_dna::k(k);
+    std::cerr << "Kmer size = " << jellyfish::mer_dna::k() << std::endl;
+
 
     if (optind >= argc) print_usage();
     command = argv[optind];
@@ -71,35 +111,54 @@ int process_options(int argc, char* argv[]) {
         if (optind >= argc-4) print_usage();
         bloom_tree_file = argv[optind+1];
         query_file = argv[optind+2];
-	out_file = argv[optind+3];
-	leaf_only = argv[optind+4];
+        out_file = argv[optind+3];
+        leaf_only = argv[optind+4];
+
     } else if (command == "check") {
         if (optind >= argc-1) print_usage();
         bloom_tree_file = argv[optind+1];
+
     } else if (command == "draw") {
         if (optind >= argc-2) print_usage();
         bloom_tree_file = argv[optind+1];
         out_file = argv[optind+2];
+
     } else if (command == "sim") {
         if (optind >= argc-4) print_usage();
         jfbloom_file = argv[optind+1];
         bvfile1 = argv[optind+2];
         bvfile2 = argv[optind+3];
-	sim_type = argv[optind+4];
+	    sim_type = argv[optind+4];
+
     } else if (command == "convert") {
         if (optind >= argc-2) print_usage();
         jfbloom_file = argv[optind+1];
         out_file = argv[optind+2];
+
     } else if (command == "build") {
         if (optind >= argc-4) print_usage();
         query_file = argv[optind+1];
         out_file = argv[optind+2];
         bloom_storage = argv[optind+3];
-	sim_type = argv[optind+4];
+        sim_type = argv[optind+4];
+
+    } else if (command == "hashes") {
+        if (optind >= argc-2) print_usage();
+        hashes_file = argv[optind+1];
+        nb_hashes = atoi(argv[optind+2]);
+
+    } else if (command == "count") {
+        if (optind >= argc-4) print_usage();
+        hashes_file = argv[optind+1];
+        bf_size = atol(argv[optind+2]);
+        query_file = argv[optind+3];
+        out_file = argv[optind+4];
+
+
     } else if (command == "compress") {
-	if (optind >= argc-2) print_usage();
-	bloom_tree_file = argv[optind+1];
-	out_file = argv[optind+2];
+        if (optind >= argc-2) print_usage();
+        bloom_tree_file = argv[optind+1];
+        out_file = argv[optind+2];
     }
     return optind;
 }
@@ -168,6 +227,14 @@ int main(int argc, char* argv[]) {
     } else if (command == "convert") {
         std::cerr << "Converting..." << std::endl;
         convert_jfbloom_to_rrr(jfbloom_file, out_file);
+
+    } else if (command == "hashes") {
+        // construct a new hashpair
+        construct_hashes(hashes_file, nb_hashes);
+    } else if (command == "count") {
+        int nh;
+        HashPair* hp = get_hash_function(hashes_file, nh);
+        count(query_file, out_file, *hp, nh);
 
     } else if (command == "build") {
         std::cerr << "Building..." << std::endl;
