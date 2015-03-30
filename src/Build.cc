@@ -387,14 +387,15 @@ void delete_bloom_tree(BloomTree* T) {
 
 // build the tree by repeated insertion
 void dynamic_build(
+    const std::string & hashes_file,
     const std::vector<std::string> & leaves, 
     const std::string & outf,
-    const std::string & bloom_storage,
+    //const std::string & bloom_storage,
     int type
 ) {
     // create the hashes
     int nh = 0;
-    HashPair* hashes = get_hash_function(leaves[0], nh); 
+    HashPair* hashes = get_hash_function(hashes_file, nh); 
 
     BloomTree* root = nullptr;
     
@@ -402,32 +403,33 @@ void dynamic_build(
     // for every leaf
     std::cerr << "Inserting leaves into tree..." << std::endl;
     for (const auto & leaf : leaves) {
+        /*
         // read JF filter and save it as a bv
         sdsl::bit_vector* f = read_bit_vector_from_jf(leaf);
         std::string filter_name = test_basename(leaf, std::string(".gz")) + ".bv";
         std::string store_name = bloom_storage;
         store_name.append(filter_name);
         sdsl::store_to_file(*f, store_name);
+        */
 
         // create the node that points to the filter we just saved
-        BloomTree* N = new BloomTree(store_name, *hashes, nh);
+        BloomTree* N = new BloomTree(leaf, *hashes, nh);
         
         //  insert this new leaf
         root = insert_bloom_tree(root, N, type);
 
-        delete f;
-	count++;
-	if (count % 100 == 0){
-		std::string temp_out = outf;
-		temp_out.append("_");
-		temp_out.append(std::to_string(count));
-		draw_bt(root, temp_out);
-	}
+        count++;
+        if (count % 100 == 0){
+            std::string temp_out = outf;
+            temp_out.append("_");
+            temp_out.append(std::to_string(count));
+            draw_bt(root, temp_out);
+        }
     }
     
     // write the tree file
     std::cerr << "Built the whole tree." << std::endl;
-    write_bloom_tree(outf, root, leaves[0]);
+    write_bloom_tree(outf, root, hashes_file);
     
     // delete the tree (which saves it)
     std::cerr << "Freeing tree (and saving dirty filters)" << std::endl;

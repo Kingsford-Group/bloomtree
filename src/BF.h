@@ -43,7 +43,8 @@ protected:
 
 class UncompressedBF : public BF {
 public:
-    UncompressedBF(const std::string & filename, HashPair hp, int nh);
+    UncompressedBF(const std::string & filename, HashPair hp, int nh, uint64_t size = 0);
+
     virtual ~UncompressedBF();
 
     virtual void load();

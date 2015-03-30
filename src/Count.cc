@@ -58,6 +58,7 @@ bool count(
     std::string outfilen,
     HashPair hp,
     int nh,
+    uint64_t bf_size,
     int num_threads
     ) {
     
@@ -79,7 +80,7 @@ bool count(
     counter.exec_join(num_threads);
 
     // build the BF
-    UncompressedBF bf(outfilen, hp, nh);
+    UncompressedBF bf(outfilen, hp, nh, bf_size);
 
     // add each kmer to the BF
     const auto jf_ary = mer_hash.ary();

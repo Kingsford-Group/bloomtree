@@ -46,8 +46,8 @@ void print_usage() {
     std::cerr 
         << "Usage: bt [query|convert|build] ...\n"
         << "    \"hashes\" [-k 20] hashfile nb_hashes\n"
-        << "    \"count\" hashfile fasta_in filter_out\n"
-        << "    \"build\" filterlistfile outfile file_storage sim_type\n"
+        << "    \"count\" hashfile bf_size fasta_in filter_out.bf.bv\n"
+        << "    \"build\" hashfile filterlistfile outfile sim_type\n"
 	    << "    \"compress\" bloomtreefile outfile\n"
 
         << "    \"check\" bloomtreefile\n"
@@ -137,9 +137,10 @@ int process_options(int argc, char* argv[]) {
 
     } else if (command == "build") {
         if (optind >= argc-4) print_usage();
-        query_file = argv[optind+1];
-        out_file = argv[optind+2];
-        bloom_storage = argv[optind+3];
+        hashes_file = argv[optind+1];
+        query_file = argv[optind+2];
+        out_file = argv[optind+3];
+        //bloom_storage = argv[optind+4];
         sim_type = argv[optind+4];
 
     } else if (command == "hashes") {
@@ -234,24 +235,25 @@ int main(int argc, char* argv[]) {
     } else if (command == "count") {
         int nh;
         HashPair* hp = get_hash_function(hashes_file, nh);
-        count(query_file, out_file, *hp, nh);
+        count(query_file, out_file, *hp, nh, bf_size);
 
     } else if (command == "build") {
         std::cerr << "Building..." << std::endl;
         std::vector<std::string> leaves = read_filter_list(query_file); //not a query file
         //build_bt_from_jfbloom(leaves, out_file, parallel_level);
-        dynamic_build(leaves, out_file, bloom_storage, std::stoi(sim_type));
+        dynamic_build(hashes_file, leaves, out_file, std::stoi(sim_type));
+
     } else if (command == "compress") {
-	std::cerr << "Compressing.." << std::endl;
-	BloomTree* root = read_bloom_tree(bloom_tree_file, false);
-	std::ifstream in(bloom_tree_file.c_str());
-	std::string header;
-	getline(in, header);
-	std::vector<std::string> fields;
-	SplitString(header, ',', fields);
-	
-	compress_bt(root);
-	write_compressed_bloom_tree(out_file, root, fields[1]);
+        std::cerr << "Compressing.." << std::endl;
+        BloomTree* root = read_bloom_tree(bloom_tree_file, false);
+        std::ifstream in(bloom_tree_file.c_str());
+        std::string header;
+        getline(in, header);
+        std::vector<std::string> fields;
+        SplitString(header, ',', fields);
+            
+        compress_bt(root);
+        write_compressed_bloom_tree(out_file, root, fields[1]);
     }
     std::cerr << "Done." << std::endl;
 }

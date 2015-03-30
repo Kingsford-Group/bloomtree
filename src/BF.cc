@@ -145,11 +145,15 @@ void BF::compress() {
 }
 /*============================================*/
 
-UncompressedBF::UncompressedBF(const std::string & f, HashPair hp, int nh) :
+UncompressedBF::UncompressedBF(const std::string & f, HashPair hp, int nh, uint64_t size) :
     BF(f, hp, nh),
     bv(nullptr)
 {
+    if (size > 0) {
+        bv = new sdsl::bit_vector(size);
+    }
 }
+
 
 UncompressedBF::~UncompressedBF() {
     // call to base destructor happens automatically

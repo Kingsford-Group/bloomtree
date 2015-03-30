@@ -9,6 +9,7 @@ bool count(
     std::string outfilen,
     HashPair hp,
     int nh,
+    uint64_t bf_size,
     int num_threads = 16
     );
 #endif
