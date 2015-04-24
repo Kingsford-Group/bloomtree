@@ -1,5 +1,5 @@
 CXXFLAGS=-Wall -pedantic -std=c++11 -DNDEBUG -O3
-LDFLAGS=-lsdsl -ldivsufsort -ldivsufsort64 -ljellyfish-2.0 -lpthread -lz
+LDFLAGS=-static -lsdsl -ldivsufsort -ldivsufsort64 -ljellyfish-2.0 -lpthread -lz
 
 all: clean bt
 

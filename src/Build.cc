@@ -399,7 +399,7 @@ void dynamic_build(
 
     BloomTree* root = nullptr;
     
-    int count = 0;
+    //int count = 0;
     // for every leaf
     std::cerr << "Inserting leaves into tree..." << std::endl;
     for (const auto & leaf : leaves) {
@@ -418,6 +418,7 @@ void dynamic_build(
         //  insert this new leaf
         root = insert_bloom_tree(root, N, type);
 
+	/*
         count++;
         if (count % 100 == 0){
             std::string temp_out = outf;
@@ -425,6 +426,7 @@ void dynamic_build(
             temp_out.append(std::to_string(count));
             draw_bt(root, temp_out);
         }
+	*/
     }
     
     // write the tree file

@@ -21,7 +21,7 @@ std::string query_file;
 std::string out_file;
 std::string jfbloom_file;
 std::string bvfile1, bvfile2;
-std::string sim_type;
+int sim_type;
 std::string bloom_storage;
 std::string leaf_only;
 
@@ -39,6 +39,7 @@ static struct option LONG_OPTIONS[] = {
     {"threads", required_argument, 0, 'p'},
     {"query-threshold", required_argument, 0, 't'},
     {"k", required_argument, 0, 'k'},
+    {"sim-type", required_argument, 0, 's'},
     {0,0,0,0}
 };
 
@@ -47,7 +48,7 @@ void print_usage() {
         << "Usage: bt [query|convert|build] ...\n"
         << "    \"hashes\" [-k 20] hashfile nb_hashes\n"
         << "    \"count\" hashfile bf_size fasta_in filter_out.bf.bv\n"
-        << "    \"build\" hashfile filterlistfile outfile sim_type\n"
+        << "    \"build\" [--sim-type 0] hashfile filterlistfile outfile\n"
 	    << "    \"compress\" bloomtreefile outfile\n"
 
         << "    \"check\" bloomtreefile\n"
@@ -56,7 +57,7 @@ void print_usage() {
         << "    \"query\" [--max-filters 32] [-t 0.8] bloomtreefile queryfile outfile leaf_only\n"
 
         << "    \"convert\" jfbloomfilter outfile\n"
-        << "    \"sim\" bloombase bvfile1 bvfile2 sim_type\n"
+        << "    \"sim\" [--sim-type 0] bloombase bvfile1 bvfile2\n"
         << std::endl;
     exit(3);
 }
@@ -78,6 +79,7 @@ void construct_hashes(std::string & hashesfile, int nh) {
 
 int process_options(int argc, char* argv[]) {
     int k = 20;
+    //int sim_type = 0;
     int a;
     while ((a=getopt_long(argc, argv, OPTIONS, LONG_OPTIONS, 0)) != -1) {
         switch(a) {
@@ -94,7 +96,9 @@ int process_options(int argc, char* argv[]) {
             case 'k': 
                 k = atoi(optarg);
                 break;
-
+	    case 's':
+		sim_type = atoi(optarg);
+		break;
             default:
                 std::cerr << "Unknown option." << std::endl;
                 print_usage();
@@ -124,11 +128,11 @@ int process_options(int argc, char* argv[]) {
         out_file = argv[optind+2];
 
     } else if (command == "sim") {
-        if (optind >= argc-4) print_usage();
+        if (optind >= argc-3) print_usage();
         jfbloom_file = argv[optind+1];
         bvfile1 = argv[optind+2];
         bvfile2 = argv[optind+3];
-	    sim_type = argv[optind+4];
+	//    sim_type = argv[optind+4];
 
     } else if (command == "convert") {
         if (optind >= argc-2) print_usage();
@@ -136,12 +140,12 @@ int process_options(int argc, char* argv[]) {
         out_file = argv[optind+2];
 
     } else if (command == "build") {
-        if (optind >= argc-4) print_usage();
+        if (optind >= argc-3) print_usage();
         hashes_file = argv[optind+1];
         query_file = argv[optind+2];
         out_file = argv[optind+3];
         //bloom_storage = argv[optind+4];
-        sim_type = argv[optind+4];
+        // sim_type = argv[optind+4];
 
     } else if (command == "hashes") {
         if (optind >= argc-2) print_usage();
@@ -209,7 +213,7 @@ int main(int argc, char* argv[]) {
         bf2->load();
 
         std::cerr << "Computing Sim..." << std::endl;
-        uint64_t test = bf1->similarity(bf2, std::stoi(sim_type));
+        uint64_t test = bf1->similarity(bf2, sim_type);
 	//std::tuple<uint64_t, uint64_t> sim = bf1->b_similarity(bf2);
 	std::cerr << "Done " << std::endl;
 	std::cout << test << std::endl;
@@ -241,7 +245,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "Building..." << std::endl;
         std::vector<std::string> leaves = read_filter_list(query_file); //not a query file
         //build_bt_from_jfbloom(leaves, out_file, parallel_level);
-        dynamic_build(hashes_file, leaves, out_file, std::stoi(sim_type));
+        dynamic_build(hashes_file, leaves, out_file, sim_type); //std::stoi(sim_type));
 
     } else if (command == "compress") {
         std::cerr << "Compressing.." << std::endl;
