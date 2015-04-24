@@ -54,7 +54,7 @@ void print_usage() {
         << "    \"check\" bloomtreefile\n"
         << "    \"draw\" bloomtreefile out.dot\n"
 
-        << "    \"query\" [--max-filters 32] [-t 0.8] bloomtreefile queryfile outfile leaf_only\n"
+        << "    \"query\" [--max-filters 1] [-t 0.8] bloomtreefile queryfile outfile leaf_only\n"
 
         << "    \"convert\" jfbloomfilter outfile\n"
         << "    \"sim\" [--sim-type 0] bloombase bvfile1 bvfile2\n"
