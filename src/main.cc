@@ -23,7 +23,7 @@ std::string jfbloom_file;
 std::string bvfile1, bvfile2;
 int sim_type;
 std::string bloom_storage;
-std::string leaf_only;
+int leaf_only;
 
 std::string hashes_file;
 unsigned nb_hashes;
@@ -32,7 +32,7 @@ uint64_t bf_size;
 
 unsigned parallel_level = 3; // no parallelism by default
 
-const char * OPTIONS = "t:p:f:";
+const char * OPTIONS = "t:p:f:l:";
 
 static struct option LONG_OPTIONS[] = {
     {"max-filters", required_argument, 0, 'f'},
@@ -40,6 +40,7 @@ static struct option LONG_OPTIONS[] = {
     {"query-threshold", required_argument, 0, 't'},
     {"k", required_argument, 0, 'k'},
     {"sim-type", required_argument, 0, 's'},
+    {"leaf-only", required_argument,0,'l'},
     {0,0,0,0}
 };
 
@@ -54,7 +55,7 @@ void print_usage() {
         << "    \"check\" bloomtreefile\n"
         << "    \"draw\" bloomtreefile out.dot\n"
 
-        << "    \"query\" [--max-filters 1] [-t 0.8] bloomtreefile queryfile outfile leaf_only\n"
+        << "    \"query\" [--max-filters 1] [-t 0.8] [-leaf-only 0] bloomtreefile queryfile outfile\n"
 
         << "    \"convert\" jfbloomfilter outfile\n"
         << "    \"sim\" [--sim-type 0] bloombase bvfile1 bvfile2\n"
@@ -92,7 +93,8 @@ int process_options(int argc, char* argv[]) {
             case 'f':
                 BF_INMEM_LIMIT = unsigned(atoi(optarg));
                 break;
-
+	    case 'l':
+		leaf_only = atoi(optarg);
             case 'k': 
                 k = atoi(optarg);
                 break;
@@ -112,11 +114,11 @@ int process_options(int argc, char* argv[]) {
     if (optind >= argc) print_usage();
     command = argv[optind];
     if (command == "query") {
-        if (optind >= argc-4) print_usage();
+        if (optind >= argc-3) print_usage();
         bloom_tree_file = argv[optind+1];
         query_file = argv[optind+2];
         out_file = argv[optind+3];
-        leaf_only = argv[optind+4];
+        //leaf_only = argv[optind+4];
 
     } else if (command == "check") {
         if (optind >= argc-1) print_usage();
@@ -184,7 +186,7 @@ int main(int argc, char* argv[]) {
 
         std::cerr << "Querying..." << std::endl;
         std::ofstream out(out_file);
-	if (leaf_only == "1"){
+	if (leaf_only == 1){
 		leaf_query_from_file(root, query_file, out);
 	} else {
 	        batch_query_from_file(root, query_file, out);
