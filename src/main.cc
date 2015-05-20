@@ -21,16 +21,17 @@ std::string query_file;
 std::string out_file;
 std::string jfbloom_file;
 std::string bvfile1, bvfile2;
-int sim_type;
+int sim_type=0;
 std::string bloom_storage;
 int leaf_only;
+unsigned cutoff_count=3;
 
 std::string hashes_file;
 unsigned nb_hashes;
 uint64_t bf_size;
 
-
-unsigned parallel_level = 3; // no parallelism by default
+unsigned num_threads = 16;
+//unsigned parallel_level = 3; // no parallelism by default
 
 const char * OPTIONS = "t:p:f:l:";
 
@@ -41,6 +42,7 @@ static struct option LONG_OPTIONS[] = {
     {"k", required_argument, 0, 'k'},
     {"sim-type", required_argument, 0, 's'},
     {"leaf-only", required_argument,0,'l'},
+    {"cutoff", required_argument,0,'c'},
     {0,0,0,0}
 };
 
@@ -48,7 +50,7 @@ void print_usage() {
     std::cerr 
         << "Usage: bt [query|convert|build] ...\n"
         << "    \"hashes\" [-k 20] hashfile nb_hashes\n"
-        << "    \"count\" hashfile bf_size fasta_in filter_out.bf.bv\n"
+        << "    \"count\" [--cutoff 3] [--threads 16] hashfile bf_size fasta_in filter_out.bf.bv\n"
         << "    \"build\" [--sim-type 0] hashfile filterlistfile outfile\n"
 	    << "    \"compress\" bloomtreefile outfile\n"
 
@@ -88,7 +90,8 @@ int process_options(int argc, char* argv[]) {
                 QUERY_THRESHOLD = atof(optarg);
                 break;
             case 'p':
-                parallel_level = unsigned(atoi(optarg));
+		num_threads = unsigned(atoi(optarg));
+                //parallel_level = unsigned(atoi(optarg));
                 break;
             case 'f':
                 BF_INMEM_LIMIT = unsigned(atoi(optarg));
@@ -100,6 +103,9 @@ int process_options(int argc, char* argv[]) {
                 break;
 	    case 's':
 		sim_type = atoi(optarg);
+		break;
+	    case 'c':
+		cutoff_count = unsigned(atoi(optarg));
 		break;
             default:
                 std::cerr << "Unknown option." << std::endl;
@@ -241,7 +247,8 @@ int main(int argc, char* argv[]) {
     } else if (command == "count") {
         int nh;
         HashPair* hp = get_hash_function(hashes_file, nh);
-        count(query_file, out_file, *hp, nh, bf_size);
+	std::cerr << "Cutoff Count: " << cutoff_count << std::endl;
+        count(query_file, out_file, *hp, nh, bf_size, num_threads, cutoff_count);
 
     } else if (command == "build") {
         std::cerr << "Building..." << std::endl;

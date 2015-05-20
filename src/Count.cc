@@ -59,7 +59,8 @@ bool count(
     HashPair hp,
     int nh,
     uint64_t bf_size,
-    int num_threads
+    int num_threads,
+    unsigned cutoff_count
     ) {
     
     // jellyfish default counting values
@@ -85,9 +86,10 @@ bool count(
     // add each kmer to the BF
     const auto jf_ary = mer_hash.ary();
     const auto end = jf_ary->end();
+    std::cerr << "Right before cutoff count: " << cutoff_count << std::endl;
     for(auto kmer = jf_ary->begin(); kmer != end; ++kmer) {
         auto& key_val = *kmer;
-        if (key_val.second >= 3) {
+        if (key_val.second >= cutoff_count) {
             bf.add(key_val.first);
         }
     }

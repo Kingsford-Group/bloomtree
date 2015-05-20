@@ -23,16 +23,16 @@ bioRxiv, 2015. doi: http://dx.doi.org/10.1101/017087
 To build and query a dataset using SBT, you should follow this general pipeline:
 \begin{enumerate}
 \item You first initialize the hash functions by running ``hashes'' command. 
-\item Convert each fasta file in the database to a bloom filter bit vector using the  ``count`` command. 
-\item Compile a list of all the bit vectors generated and build the SBT for that set using the ``build`` command.
-\item Compress the bit vectors that make up the entire tree using the built in ``compress`` command.
-\item Save your input queries as a line-separated text file and run the ``query`` command with the desired threshold and using the compressed SBT file.
+\item Convert each fasta file in the database to a bloom filter bit vector using the  ``count'' command. 
+\item Compile a list of all the bit vectors generated and build the SBT for that set using the ``build'' command.
+\item Compress the bit vectors that make up the entire tree using the built in ``compress'' command.
+\item Save your input queries as a line-separated text file and run the ``query'' command with the desired threshold and using the compressed SBT file.
 \end{enumerate}
 More details are given below.
 
 \section{Analysis Pipeline Details}
 
-You first initialize the hash functions by running ``hashes'' command. The parameter \verb+-k+ sets the kmer index size (default 20), and the parameter \verb+nb_hashes+ sets the number of hash functions to use. A typical value for this is $1$:
+You first initialize the hash functions by running ``hashes'' command. The parameter \verb+hashfile+ is the hashfile output by the ``hashes'' command, the parameter \verb+-k+ sets the kmer index size (default 20), and the parameter \verb+nb_hashes+ sets the number of hash functions to use. A typical value for this is $1$:
 %
 \begin{quote}
 \begin{verbatim}
@@ -40,15 +40,15 @@ bt hashes [-k 20] hashfile nb_hashes
 \end{verbatim}
 \end{quote}
 
-Next, you count the kmers in each of your input fastq/fasta files using the ``count'' subcommand; this will produce a bloom filter for the given file:
+Next, you count the kmers in each of your input fastq/fasta files using the ``count'' subcommand; this will produce a bloom filter (with the name filter\_out.bf.bv) for the given uncompressed file fasta\_in.fasta :
 %
 \begin{quote}
 \begin{verbatim}
-bt count hashfile bf_size fasta_in filter_out.bf.bv
+bt count [--cutoff 3] [--threads 16] hashfile bf_size fasta_in.fasta filter_out.bf.bv
 \end{verbatim}
 \end{quote}
 %
-Here \verb+hashfile+ is the hashfile output by the ``hashes'' command. \verb+bf_size+ gives the bloom filter size. This will depend on the number of kmers in your input file. It must be the SAME for all files that you are putting into the same SBT. If you have lots of files on which to build a SBT, you should write a little script that uses the above command to create a bloom filter for each. Something like:
+Although we recommend using the default values for cutoff and counting threads, it is possible to adjust the minimum count required for a k-mer to be added to the bloom filter with the \verb+--cutoff+ parameter (the default is to include any element with a count of 3 or greater) or to adjust the number of threads used by the Jellyfish library with the \verb+--threads+ parameter. The parameter \verb+hashfile+ is output from the previous ``hashes'' command and the \verb+bf_size+ gives the bloom filter size. This will depend on the number of kmers in your input file and the number of files in your complete bloom tree. It must be the SAME for all files that you are putting into the same SBT. If you have lots of files on which to build a SBT, you should write a little script that uses the above command to create a bloom filter for each. Something like:
 %
 \begin{quote}
 \begin{verbatim}
@@ -61,18 +61,18 @@ done
 Now, create a list of the \verb+.bf.bv+ files that you just created as text file with one filename per line (using, say, \verb+ls *.bf.bv > listoffiles.txt+) and call the ``build'' subcommand:
 \begin{quote}
 \begin{verbatim}
-bt build [--sim-type 0] hashfile filterlistfile outfile
+bt build [--sim-type 0] hashfile filterlistfile bloomtreefile
 \end{verbatim}
 \end{quote}
-Here, \verb+filterlistfile+ is a list of the \verb+.bf.bv+ files. \verb+sim-type+ is an advanced command that changes the rule for where the files are inserted into the tree. After building (which may take some time), \verb+outfile+ will contain the data about the tree, and there will be many more \verb+.bf.bv+ files created. 
+Here, \verb+filterlistfile+ is a list of the \verb+.bf.bv+ files. \verb+sim-type+ is an advanced command that changes the rule for where the files are inserted into the tree. After building (which may take some time), \verb+bloomtreefile+ will contain the data about the tree, and there will be many more \verb+.bf.bv+ files created. 
 
 Finally, you must compress the tree to query it:
 \begin{quote}
 \begin{verbatim}
-bt compress bloomtreefile outfile
+bt compress bloomtreefile compressedbloomtreefile
 \end{verbatim}
 \end{quote}
-This will create a compressed version of the tree which you can then query.
+This will create a compressed version of the tree (compressedbloomtreefile) which you can then query.
 
 You can issue a query by putting 1 query sequence per line in a query text file and using the ``query'' subcommand:
 \begin{quote}
@@ -89,6 +89,7 @@ The ``check'', ``draw'', and ``sim'' subcommands can be used to carry out more s
 \subsection{Hashes} 
 \textit{bt hashes [-k 20] hashfile nb\_hashes}
 \begin{itemize}
+\item \textbf{k} is an optional parameter that sets the k-mer size used in every step of the SBT pipeline
 \item \textbf{hashfile} is the location of the file being written
 \item \textbf{nb\_hashes} is an integer that sets the number of hashes generated for the bloom filters
 \end{itemize}
@@ -101,9 +102,12 @@ To build a set of conserved hash functions for the bloom filters, use a command 
 This will write a file 'myhashfile.hh' which stores the necessary information for the Jellyfish library's bloom filter functions.
 
 \subsection{Count}
-\textit{bt count hashfile bf\_size fasta\_in filter\_out.bf.bv}
+\textit{bt count [--cutoff 3] [--threads 16] hashfile bf\_size fasta\_in filter\_out.bf.bv}
 \begin{itemize}
-\item \textbf{hashfile} is the location of the hashfile written using the ``hashes`` function
+\item \textbf{cutoff} is an optional parameter that sets the minimum count required required for a unique k-mer to be added to the bloom filter
+\item \textbf{threads} is an optional parameter that sets the number of threads the Jellyfish library uses when counting k-mers
+\item \textbf{hashfile} is the location of the hashfile written using the ``hashes'' function
+\item \textbf{bf\_size} is the number of expected k-mers in the bloom filter. 
 \item \textbf{fasta\_in} is the location of the input fasta being counted
 \item \textbf{filter\_out.bf.bv} is the location of the bloom filter being written
 \end{itemize}
@@ -113,15 +117,18 @@ To convert a fasta short-read file to a SBT bit vector, use a command like: \\
 
 \textit{bt count myhashfile.hh 2000000000 SRR001.fasta SRR0001.bf.bv} \\
 
-This will count and hash the k-mers associated with 'SRR001.fasta' using the settings defined by 'myhashfile.hh' and store all k-mers in 'SRR0001.bf.bv'
+This will count and hash the k-mers associated with 'SRR001.fasta' using the settings defined by 'myhashfile.hh' and store all k-mers in 'SRR0001.bf.bv' \\
+
+\textbf{A note on setting the bf\_size:}
+As every filter must have a uniform size, bf\_size should be set to an approximate count of the unique k-mers in your complete data set. This avoids saturation in the highest levels of the SBT and is the extra space is largely factored out through the compression step. If space is a concern, it is also possible to set this value to be the size of the largest leaf filters, as overall accuracy is only affected by the false positive rate of the leaf filters. This will however greatly increase the run-time of SBT queries. 
 
 \subsection{Build}
-\textit{bt build [--sim-type 0] hashfile filterlistfile outfile}
+\textit{bt build [--sim-type 0] hashfile filterlistfile bloomtreefile}
 \begin{itemize}
 \item \textbf{sim-type} is an option that defines the similarity metric used. (0) uses the default Hamming distance between two bit vectors while (1) uses a Jaccard index metric.
-\item \textbf{hashfile} is the location of the hashfile written using the ``hashes`` function
-\item \textbf{filterlistfile} is the location of a plaintext file containing the paths to all the bit vectors generated by the ``count`` function
-\item \textbf{outfile} is the location of the SBT structure file being written
+\item \textbf{hashfile} is the location of the hashfile written using the ``hashes'' function
+\item \textbf{filterlistfile} is the location of a plaintext file containing the paths to all the bit vectors generated by the ``count'' function
+\item \textbf{bloomtreefile} is the location of the SBT structure file being written
 \end{itemize}
 \textbf{Usage:}
 
@@ -132,10 +139,10 @@ To build the bloomtree from a list of SBT bit vectors, use a command like: \\
 This will build the SBT through single-threaded insertions of each element in 'mybitvectorlist.txt' and write the union filters to the same directory as the leaves. Once the tree is completely built, the edge-relationships that define the tree will be saved to 'mySBT.bloomtree'.
 
 \subsection{Compress}
-\textit{bt compress bloomtreefile outfile}
+\textit{bt compress bloomtreefile compressedbloomtreefile}
 \begin{itemize}
 \item \textbf{bloomtreefile} is the location of the SBT structure file written by the ``build`` function
-\item \textbf{outfile} is the location of the [compressed] SBT structure file being written
+\item \textbf{compressedbloomtreefile} is the location of the [compressed] SBT structure file being written
 \end{itemize}
 \textbf{Usage:}
 
@@ -152,7 +159,7 @@ This will compress every file in the original SBT and write a new bloomtree usin
 \item \textbf{max-filters} is an option that defines the total number of filters that can be loaded at one time into memory. As filters are loaded only once per query, one filter is usually sufficient for single-threaded operations.
 \item \textbf{threshold (t)} is a float between 0 and 1 that defines the proportion of query k-mers that must be present in any bloom filter to define a ``hit``. The default value assumes a valid hit contains 80\% of exact-matching k-mers.
 \item \textbf{leaf-only} has two possible values. (0) is the default value and searches the entire SBT while (1) ignores the tree structure and queries just the leaf nodes of the tree in a naive search.
-\item \textbf{bloomtreefile} is the location of the SBT structure file written by the ``build`` function
+\item \textbf{bloomtreefile} is the location of the SBT structure file written by the ``build'' function or the compressed SBT structure file written by the ``compressed'' function. Using the ``compressed'' file results in a substantially faster query time.
 \item \textbf{queryfile} is the location of a text file containing line-separated full-length sequences.
 \item \textbf{outfile} is the location of the [compressed] SBT structure file being written
 \end{itemize}
@@ -168,7 +175,7 @@ This will batch query the bloom tree encoded by 'mySBT.bloomtree' for every line
 \subsection{Check}
 \textit{bt check bloomtreefile}
 \begin{itemize}
-\item \textbf{bloomtreefile} is the location of the SBT structure file written by the ``build`` function
+\item \textbf{bloomtreefile} is the location of the SBT structure file written by the ``build'' function
 \end{itemize}
 \textbf{Usage:}
 
@@ -181,7 +188,7 @@ This will write a verbose set of output for each parent-child relationship in th
 \subsection{Draw}
 \textit{bt draw bloomtreefile out.dot}
 \begin{itemize}
-\item \textbf{bloomtreefile} is the location of the SBT structure file written by the ``build`` function
+\item \textbf{bloomtreefile} is the location of the SBT structure file written by the ``build'' function
 \item \textbf{out.dot} is the location of the graphvis file being written
 \end{itemize}
 \textbf{Usage:}
@@ -198,8 +205,8 @@ This will construct a .dot relationship of all nodes and edges that can be plott
 \textit{bt sim [--sim-type 0] hashfile bvfile1 bvfile2}
 \begin{itemize}
 \item \textbf{sim-type} is an option that defines the similarity metric used. (0) uses the default Hamming distance between two bit vectors while (1) uses a Jaccard index metric.
-\item \textbf{hashfile} is the location of the hashfile written using the ``hashes`` function
-\item \textbf{bvfile1, bvfile2} are any combination of two SBT bit vectors constructed using the ``count`` function.
+\item \textbf{hashfile} is the location of the hashfile written using the ``hashes'' function
+\item \textbf{bvfile1, bvfile2} are any combination of two SBT bit vectors constructed using the ``count'' function.
 \end{itemize}
 \textbf{Usage:}
 

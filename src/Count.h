@@ -10,6 +10,7 @@ bool count(
     HashPair hp,
     int nh,
     uint64_t bf_size,
-    int num_threads = 16
+    int num_threads = 16,
+    unsigned cutoff_count = 3
     );
 #endif
