@@ -1,1 +1,9 @@
-Document Me!
+The Sequence Bloom Tree (SBT) is a method that will allow you to index a set of short-read sequencing experiments and then query them quickly for a given sequence. The code base provided here is an implementation of SBT written in C++ and is open source. 
+
+For further details please refer to the user manual (user_manual/sbt-manual.pdf)
+
+If you use this work, please cite:
+
+Brad Solomon and Carl Kingsford.
+Large-Scale Search of Transcriptomic Read Sets with Sequence Bloom Trees. 
+bioRxiv, 2015. doi: http://dx.doi.org/10.1101/017087
