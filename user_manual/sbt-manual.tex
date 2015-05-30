@@ -161,8 +161,11 @@ This will compress every file in the original SBT and write a new bloomtree usin
 \item \textbf{leaf-only} has two possible values. (0) is the default value and searches the entire SBT while (1) ignores the tree structure and queries just the leaf nodes of the tree in a naive search.
 \item \textbf{bloomtreefile} is the location of the SBT structure file written by the ``build'' function or the compressed SBT structure file written by the ``compressed'' function. Using the ``compressed'' file results in a substantially faster query time.
 \item \textbf{queryfile} is the location of a text file containing line-separated full-length sequences.
-\item \textbf{outfile} is the location of the [compressed] SBT structure file being written
+\item \textbf{outfile} is the location of the text file containing the results.
 \end{itemize}
+
+The results are in the format {\tt *}, followed immediately by the query sequence; a space; and the number of leaf nodes containing the query sequence.
+
 \textbf{Usage:}
 
 To query the SBT for an arbitrary set of sequences, use a command like: \\
