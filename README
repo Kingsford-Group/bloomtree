@@ -1,5 +1,18 @@
 The Sequence Bloom Tree (SBT) is a method that will allow you to index a set of short-read sequencing experiments and then query them quickly for a given sequence. The code base provided here is an implementation of SBT written in C++ and is open source. 
 
+To install using the source:
+1. Install gcc (Version 4.9.1 or later)
+
+2. Install Jellyfish (Version 2.2.0 or later)
+
+3. Install SDSL 
+
+4. Download the latest version of SBT using Github
+
+5. Compile:
+cd bloomtree/src
+make
+
 For further details please refer to the user manual (user_manual/sbt-manual.pdf)
 
 If you use this work, please cite:
@@ -7,3 +20,10 @@ If you use this work, please cite:
 Brad Solomon and Carl Kingsford.
 Large-Scale Search of Transcriptomic Read Sets with Sequence Bloom Trees. 
 bioRxiv, 2015. doi: http://dx.doi.org/10.1101/017087
+
+The current SBT implementation uses the SDSL library under the GNU General Public License (GPLv3) and is also freely distributed under the same license. If you use SBT please also cite the following paper:
+
+Gog, Simon and Beller, Timo and Moffat, Alistair and petri, Matthias.
+From Theory to Practice: Plug and Play with Succinct Data Structures.
+13th International Symposium on Experimental Algorithms (SEA 2014).
+doi: http://dx.doi.org/10.1007/978-3-319-07959-2_28
