@@ -2,13 +2,9 @@ The Sequence Bloom Tree (SBT) is a method that will allow you to index a set of 
 
 To install using the source:
 1. Install gcc (Version 4.9.1 or later)
-
 2. Install Jellyfish (Version 2.2.0 or later)
-
 3. Install SDSL 
-
 4. Download the latest version of SBT using Github
-
 5. Compile:
 cd bloomtree/src
 make
