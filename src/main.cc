@@ -24,6 +24,7 @@ std::string bvfile1, bvfile2;
 int sim_type=0;
 std::string bloom_storage;
 int leaf_only;
+std::string weighted="";
 unsigned cutoff_count=3;
 
 std::string hashes_file;
@@ -33,7 +34,7 @@ uint64_t bf_size;
 unsigned num_threads = 16;
 //unsigned parallel_level = 3; // no parallelism by default
 
-const char * OPTIONS = "t:p:f:l:";
+const char * OPTIONS = "t:p:f:l:c:w:s:";
 
 static struct option LONG_OPTIONS[] = {
     {"max-filters", required_argument, 0, 'f'},
@@ -43,6 +44,7 @@ static struct option LONG_OPTIONS[] = {
     {"sim-type", required_argument, 0, 's'},
     {"leaf-only", required_argument,0,'l'},
     {"cutoff", required_argument,0,'c'},
+    {"weighted", required_argument,0,'w'},
     {0,0,0,0}
 };
 
@@ -57,7 +59,7 @@ void print_usage() {
         << "    \"check\" bloomtreefile\n"
         << "    \"draw\" bloomtreefile out.dot\n"
 
-        << "    \"query\" [--max-filters 1] [-t 0.8] [-leaf-only 0] bloomtreefile queryfile outfile\n"
+        << "    \"query\" [--max-filters 1] [-t 0.8] [-leaf-only 0] [--weighted weightfile] bloomtreefile queryfile outfile\n"
 
         << "    \"convert\" jfbloomfilter outfile\n"
         << "    \"sim\" [--sim-type 0] bloombase bvfile1 bvfile2\n"
@@ -107,6 +109,9 @@ int process_options(int argc, char* argv[]) {
 	    case 'c':
 		cutoff_count = unsigned(atoi(optarg));
 		break;
+	    case 'w':
+		weighted = optarg;
+		break;	
             default:
                 std::cerr << "Unknown option." << std::endl;
                 print_usage();
@@ -194,6 +199,9 @@ int main(int argc, char* argv[]) {
         std::ofstream out(out_file);
 	if (leaf_only == 1){
 		leaf_query_from_file(root, query_file, out);
+	} else if (weighted!="") {
+		std::cerr << "Weighted query \n";
+		batch_weightedquery_from_file(root, query_file, weighted, out);	
 	} else {
 	        batch_query_from_file(root, query_file, out);
 	}

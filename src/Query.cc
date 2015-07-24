@@ -75,18 +75,45 @@ void compress_bt(BloomTree* root) {
 	}
 }
 
-
-// return true if the filter at this node contains > QUERY_THRESHOLD kmers
 bool query_passes(BloomTree* root, const std::set<jellyfish::mer_dna> & q) {
     assert(q.size() > 0);
     auto bf = root->bf();
     unsigned c = 0;
     for (const auto & m : q) {
-        //DEBUG: std::cout << "checking: " << m.to_str(); 
+        //DEBUG: std::cout << "checking: " << m.to_str();
         if (bf->contains(m)) c++;
         //DEBUG: std::cout << c << std::endl;
     }
     return (c >= QUERY_THRESHOLD * q.size());
+}
+
+
+// return true if the filter at this node contains > QUERY_THRESHOLD kmers
+bool query_passes(BloomTree* root, QueryInfo*  q) {//const std::set<jellyfish::mer_dna> & q) {
+    float weight = 1.0;
+    assert(q.size() > 0);
+    auto bf = root->bf();
+    float c = 0;
+    unsigned n = 0;
+    bool weighted = 0;
+    if (q->weight.empty()){
+	weighted=0;
+    } else { weighted = 1; }
+    for (const auto & m : q->query_kmers) {
+        //DEBUG: std::cout << "checking: " << m.to_str();
+	if (weighted){
+		if(q->weight.size() > n){ 
+			weight=q->weight[n]; 
+		} else {
+			std::cerr << "Number of weights (" << q->weight.size() <<") less than query kmers (" << q->query_kmers.size() << ")."  << std::endl;
+			exit(3);
+		}
+	}
+        if (bf->contains(m)) c+=weight;
+	n++;
+        //DEBUG: std::cout << c << std::endl;
+    }
+    return (c >= QUERY_THRESHOLD * q->query_kmers.size());
 }
 
 // recursively walk down the tree, proceeding to children only
@@ -176,7 +203,7 @@ void query_batch(BloomTree* root, QuerySet & qs) {
     QuerySet pass;
     unsigned n = 0;
     for (auto & q : qs) {
-        if (query_passes(root, q->query_kmers)) {
+        if (query_passes(root, q)) { //q->query_kmers)) {
             if (has_children) {
                 pass.emplace_back(q);
             } else {
@@ -216,7 +243,7 @@ void query_leaves (BloomTree* root, QuerySet & qs) {
 	unsigned n=0;
 	if (!has_children) {
     		for (auto & q : qs) {
-		        if (query_passes(root, q->query_kmers)) {
+		        if (query_passes(root, q)) {
 		                q->matching.emplace_back(root);
 		                n++;
        	 		}
@@ -269,6 +296,44 @@ void batch_query_from_file(
         delete p;
     }
 }
+
+void batch_weightedquery_from_file(
+    BloomTree* root,
+    const std::string & fn,
+    const std::string & wf,
+    std::ostream & o
+) {
+    // read in the query lines from the file.
+    std::string line;
+    std::string wfline; 
+    QuerySet qs;
+    std::ifstream in(fn);
+    std::ifstream wfin(wf);
+    DIE_IF(!in.good(), "Couldn't open query file.");
+    DIE_IF(!wfin.good(), "Couldn't open weight file.");
+    std::size_t n = 0;
+    while (getline(in, line)) {
+	getline(wfin, wfline);
+        line = Trim(line);
+	wfline = Trim(wfline);
+	
+        if (line.size() < jellyfish::mer_dna::k()) continue;
+        qs.emplace_back(new QueryInfo(line, wfline));
+        n++;
+    }
+    in.close();
+    std::cerr << "Read " << n << " queries." << std::endl;
+
+    // batch process the queries
+    query_batch(root, qs);
+    print_query_results(qs, o);
+
+    // free the query info objects
+    for (auto & p : qs) {
+        delete p;
+    }
+}
+
 
 void leaf_query_from_file(
 	BloomTree* root,
