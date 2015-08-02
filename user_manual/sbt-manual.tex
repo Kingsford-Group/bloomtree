@@ -1,8 +1,9 @@
 \documentclass{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{secdot}
+\usepackage{listings}
 
-\title{Sequence Bloom Tree v0.3.1 User Guide}
+\title{Sequence Bloom Tree v0.3.5 User Guide}
 \author{Brad Solomon and Carl Kingsford}
 \begin{document}
 \maketitle
@@ -48,7 +49,7 @@ bt count [--cutoff 3] [--threads 16] hashfile bf_size fasta_in.fasta filter_out.
 \end{verbatim}
 \end{quote}
 %
-Although we recommend using the default values for cutoff and counting threads, it is possible to adjust the minimum count required for a k-mer to be added to the bloom filter with the \verb+--cutoff+ parameter (the default is to include any element with a count of 3 or greater) or to adjust the number of threads used by the Jellyfish library with the \verb+--threads+ parameter. The parameter \verb+hashfile+ is output from the previous ``hashes'' command and the \verb+bf_size+ gives the bloom filter size. This will depend on the number of kmers in your input file and the number of files in your complete bloom tree. It must be the SAME for all files that you are putting into the same SBT. If you have lots of files on which to build a SBT, you should write a little script that uses the above command to create a bloom filter for each. Something like:
+Although we recommend using the default values for cutoff and counting threads, it is possible to adjust the minimum count required for a k-mer to be added to the bloom filter with the \verb+--cutoff+ parameter (the default is to include any element with a count of 3 or greater) or to adjust the number of threads used by the Jellyfish library with the \verb+--threads+ parameter. The parameter \verb+hashfile+ is output from the previous ``hashes'' command and the \verb+bf_size+ gives the bloom filter size. Although \verb+bf_size+ can be set arbitrarily large, we suggest setting the bloom filter size to the total count of unique kmers being inserted into the SBT. We have provided a Jellyfish script (get\_bfsize.sh) which takes in a list of fasta.gz files and compiles the total count of unique canonical kmers by their frequency in the total file set. Regardless of the tool used or number selected, it must be the SAME for all files that you are putting into the same SBT. If you have lots of files on which to build a SBT, you should write a little script that uses the above command to create a bloom filter for each. Something like:
 %
 \begin{quote}
 \begin{verbatim}
@@ -76,11 +77,12 @@ This will create a compressed version of the tree (compressedbloomtreefile) whic
 
 You can issue a query by putting 1 query sequence per line in a query text file and using the ``query'' subcommand:
 \begin{quote}
-\begin{verbatim}
-bt query [--max-filters 1] [-t 0.8] [--leaf-only 0] bloomtreefile queryfile outfile
-\end{verbatim}
+\begin{lstlisting}
+bt query [--max-filters 1] [-t 0.8] [--leaf-only 0] 
+	 [--weighted weightfile] bloomtreefile queryfile outfile
+\end{lstlisting}
 \end{quote}
-Here, \verb+-t+ gives the sensitivity threshold: the number of kmers that must be present for a query to be found. Values closer to 1 reduce the number of false positives. 
+Here, \verb+-t+ gives the sensitivity threshold: the number of kmers that must be present for a query to be found. Values closer to 1 reduce the number of false positives. You can also weight the individual kmers in the query file by providing a complete array of weights for each kmer in a space separated weightfile.
 
 The ``check'', ``draw'', and ``sim'' subcommands can be used to carry out more specialized tasks. See details below.
 
@@ -154,11 +156,12 @@ This will compress every file in the original SBT and write a new bloomtree usin
 
 
 \subsection{Query}
-\textit{bt query [--max-filters 1] [-t 0.8] [--leaf-only 0] bloomtreefile queryfile outfile}
+\textit{bt query [--max-filters 1] [-t 0.8] [--leaf-only 0] [--weighted weightfile] bloomtreefile queryfile outfile}
 \begin{itemize}
 \item \textbf{max-filters} is an option that defines the total number of filters that can be loaded at one time into memory. As filters are loaded only once per query, one filter is usually sufficient for single-threaded operations.
 \item \textbf{threshold (t)} is a float between 0 and 1 that defines the proportion of query k-mers that must be present in any bloom filter to define a ``hit``. The default value assumes a valid hit contains 80\% of exact-matching k-mers.
 \item \textbf{leaf-only} has two possible values. (0) is the default value and searches the entire SBT while (1) ignores the tree structure and queries just the leaf nodes of the tree in a naive search.
+\item \textbf{weighted} is an optional text file that contains space-separated floats which define in-order weights on the kmer starting at that index in the queryfile. For a length n query, only n-k weights must be provided.
 \item \textbf{bloomtreefile} is the location of the SBT structure file written by the ``build'' function or the compressed SBT structure file written by the ``compressed'' function. Using the ``compressed'' file results in a substantially faster query time.
 \item \textbf{queryfile} is the location of a text file containing line-separated full-length sequences.
 \item \textbf{outfile} is the location of the [compressed] SBT structure file being written
