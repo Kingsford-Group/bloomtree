@@ -6,7 +6,7 @@ C++ and is open source.
 To install using the source:
 1. Install gcc (Version 4.9.1 or later)
 2. Install Jellyfish (Version 2.2.0 or later)
-3. Install SDSL 
+3. Install SDSL-lite (Version 2.0 or later recommended) 
 4. Download the latest version of SBT using Github
 5. Compile:
 cd bloomtree/src
@@ -17,8 +17,8 @@ For further details please refer to the user manual (user_manual/sbt-manual.pdf)
 If you use this work, please cite:
 
 Brad Solomon and Carl Kingsford.
-Large-Scale Search of Transcriptomic Read Sets with Sequence Bloom Trees. 
-bioRxiv, 2015. doi: http://dx.doi.org/10.1101/017087
+Fast search of thousands of short-read sequencing experiments.
+Nature biotechnology. 2016 doi: 10.1038/nbt.3442
 
 The current SBT implementation uses the SDSL library under the GNU General
 Public License (GPLv3) and is also freely distributed under the same license.
