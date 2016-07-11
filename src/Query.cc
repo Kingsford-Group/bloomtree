@@ -91,7 +91,7 @@ bool query_passes(BloomTree* root, const std::set<jellyfish::mer_dna> & q) {
 // return true if the filter at this node contains > QUERY_THRESHOLD kmers
 bool query_passes(BloomTree* root, QueryInfo*  q) {//const std::set<jellyfish::mer_dna> & q) {
     float weight = 1.0;
-    assert(q.size() > 0);
+    assert(q != NULL && q->query.size() > 0);
     auto bf = root->bf();
     float c = 0;
     unsigned n = 0;
