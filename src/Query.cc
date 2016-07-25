@@ -76,7 +76,6 @@ void compress_bt(BloomTree* root) {
 }
 
 bool query_passes(BloomTree* root, const std::set<jellyfish::mer_dna> & q) {
-    assert(q.size() > 0);
     auto bf = root->bf();
     unsigned c = 0;
     for (const auto & m : q) {
@@ -91,7 +90,6 @@ bool query_passes(BloomTree* root, const std::set<jellyfish::mer_dna> & q) {
 // return true if the filter at this node contains > QUERY_THRESHOLD kmers
 bool query_passes(BloomTree* root, QueryInfo*  q) {//const std::set<jellyfish::mer_dna> & q) {
     float weight = 1.0;
-    assert(q.size() > 0);
     auto bf = root->bf();
     float c = 0;
     unsigned n = 0;

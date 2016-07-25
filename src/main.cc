@@ -92,26 +92,27 @@ int process_options(int argc, char* argv[]) {
                 QUERY_THRESHOLD = atof(optarg);
                 break;
             case 'p':
-		num_threads = unsigned(atoi(optarg));
+        		num_threads = unsigned(atoi(optarg));
                 //parallel_level = unsigned(atoi(optarg));
                 break;
             case 'f':
                 BF_INMEM_LIMIT = unsigned(atoi(optarg));
                 break;
-	    case 'l':
-		leaf_only = atoi(optarg);
+	        case 'l':
+    	    	leaf_only = atoi(optarg);
+                break;
             case 'k': 
                 k = atoi(optarg);
                 break;
-	    case 's':
-		sim_type = atoi(optarg);
-		break;
-	    case 'c':
-		cutoff_count = unsigned(atoi(optarg));
-		break;
-	    case 'w':
-		weighted = optarg;
-		break;	
+    	    case 's':
+	        	sim_type = atoi(optarg);
+        		break;
+    	    case 'c':
+    	    	cutoff_count = unsigned(atoi(optarg));
+		        break;
+	        case 'w':
+		        weighted = optarg;
+        		break;	
             default:
                 std::cerr << "Unknown option." << std::endl;
                 print_usage();
@@ -168,7 +169,7 @@ int process_options(int argc, char* argv[]) {
     } else if (command == "count") {
         if (optind >= argc-4) print_usage();
         hashes_file = argv[optind+1];
-        bf_size = atol(argv[optind+2]);
+        bf_size = atof(argv[optind+2]);
         query_file = argv[optind+3];
         out_file = argv[optind+4];
 
