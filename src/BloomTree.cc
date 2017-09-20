@@ -9,7 +9,7 @@
 #include <jellyfish/file_header.hpp>
 
 Heap<const BloomTree> BloomTree::bf_cache;
-int BF_INMEM_LIMIT = 1;
+int BF_INMEM_LIMIT = 100;
 
 // construct a bloom filter with the given filter backing.
 BloomTree::BloomTree(

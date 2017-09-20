@@ -44,6 +44,7 @@ sdsl::bit_vector* read_bit_vector_from_jf(const std::string & jfbloom_file) {
     // Create a new SDSL bitvector
     sdsl::bit_vector* b = new sdsl::bit_vector(length, 0);
     std::memcpy(b->data(), buf, num_bytes);
+    //std::memcpy((void*) b->data(), buf, num_bytes);
 
     /*for (unsigned long i = 0; i < length; i++) {
         if (bit(buf, i)) {

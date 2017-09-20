@@ -111,6 +111,8 @@ bool query_passes(BloomTree* root, QueryInfo*  q) {//const std::set<jellyfish::m
 	n++;
         //DEBUG: std::cout << c << std::endl;
     }
+    std::cerr << root->name() <<std::endl;
+    std::cerr << c << " " << QUERY_THRESHOLD << " " << q->query_kmers.size() << std::endl;
     return (c >= QUERY_THRESHOLD * q->query_kmers.size());
 }
 

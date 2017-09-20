@@ -166,12 +166,33 @@ void UncompressedBF::load() {
     // read the actual bits
     assert(bv == nullptr);
     bv = new sdsl::bit_vector();
+
+    struct stat buf;
+    if (stat(filename.c_str(), &buf) == -1){
+        std::cerr << "Cant stat " << filename  << std::endl;
+    } else {
+    std::cerr << "load file " << filename << " size " << buf.st_size << std::endl;
+    }
+
+
     sdsl::load_from_file(*bv, filename);
+    std::cerr << "Loaded bv size " << bv->size() << ' ' << size() << std::endl;
 }
 
 void UncompressedBF::save() {
     std::cerr << "Saving BF to " << filename << std::endl;
     sdsl::store_to_file(*bv, filename);
+    struct stat buf;
+    if (stat(filename.c_str(), &buf) == -1){
+        std::cerr << "Cant stat " << filename  << std::endl;
+    } else {
+        std::cerr << buf.st_size << ' ' << bv->size() << std::endl;
+    }
+    std::ifstream is(filename);
+    size_t s;
+    is.read((char*)&s, sizeof(s));
+    std::cerr << "save header " << s << std::endl;
+    assert(s == size());
 }
 
 
@@ -188,6 +209,7 @@ void UncompressedBF::set_bit(uint64_t p) {
 }
 
 BF* UncompressedBF::union_with(const std::string & new_name, const BF* f2) const {
+    std::cerr << "Union with " << f2->size() << " " << size() << std::endl;
     assert(size() == f2->size());
     const UncompressedBF* b = dynamic_cast<const UncompressedBF*>(f2);
     if (b == nullptr) {
@@ -199,6 +221,7 @@ BF* UncompressedBF::union_with(const std::string & new_name, const BF* f2) const
 }
 
 void UncompressedBF::union_into(const BF* f2) {
+    std::cerr << "Union into " << f2->size() << " " << size() << std::endl;
     assert(size() == f2->size());
 
     const UncompressedBF* b = dynamic_cast<const UncompressedBF*>(f2);
