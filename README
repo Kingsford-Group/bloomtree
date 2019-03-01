@@ -14,6 +14,21 @@ make
 
 For further details please refer to the user manual (user_manual/sbt-manual.pdf)
 
+FAQs:
+1. Cannot find "bloomtreefile" in the example files.
+There is no "bloomtreefile" in the example files. But you can build one using these files "Example SBT Uncompressed Leaves" (http://download.srv.cs.cmu.edu/~carlk/sbt/uncompressedleafSBT.tar.gz).
+The steps are:
+	- bt hashes [-k 20] hashfile nb_hashes	# create "hashfile", the typical value for nb_hashes is 1
+	- ls *.bf.bv > filterlistfile	# *.bf.bv files are from the downloaded example data
+	- bt build hashfile filterlistfile bloomtreefile	# create "bloomtreefile" for querying
+	- bt compress bloomtreefile compressedbloomtreefile	# create a compressed version that leads to a fater query time
+Then you can query using the command:
+	- bt query bloomtreefile/compressedbloomtreefile queryfile outfile
+
+2. Which file do I query?
+Refer to the user manual, you can query both "bloomtreefile" and "compressedbloomtreefile". Using the compressed file results in a substantially faster query time.
+
+
 If you use this work, please cite:
 
 Brad Solomon and Carl Kingsford.
